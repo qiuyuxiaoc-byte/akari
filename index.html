@@ -214,7 +214,7 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10221708</div>
+  <div id="ver">v10221714</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -3553,8 +3553,12 @@ function spawnRipple(el, cx, cy){
   var r = el.getBoundingClientRect();
   var span = document.createElement('span');
   span.className = 'ripple';
-  span.style.left = (cx - r.left) + 'px';
-  span.style.top = (cy - r.top) + 'px';
+  // 竖屏（整体旋转 90°）时，client 坐标要换算成按钮自己的局部坐标
+  var lx, ly;
+  if (ROT.on){ lx = cy - r.top; ly = r.right - cx; }
+  else { lx = cx - r.left; ly = cy - r.top; }
+  span.style.left = lx + 'px';
+  span.style.top = ly + 'px';
   var a = [], b = [];
   for (var i = 0; i < 4; i++) a.push((45 + Math.random() * 10).toFixed(0) + '%');
   for (var j = 0; j < 4; j++) b.push((45 + Math.random() * 10).toFixed(0) + '%');
