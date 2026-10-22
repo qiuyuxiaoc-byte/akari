@@ -200,7 +200,7 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10221614</div>
+  <div id="ver">v10221626</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -1447,7 +1447,7 @@ function buildInterior(){
         if (c % 3 === 0) cur = DRINKS[(Math.random() * DRINKS.length) | 0];
         prod.push({
           x: fx - 0.74 + c * 0.185, y: y0 + 0.42 + r * 0.55, z: fz - 0.2,
-          w: 0.13, h: 0.23, d: 0.15, cell: cur.cell, c: 0xf4f4f4, j: 0.05
+          w: 0.13, h: 0.23, d: 0.15, cell: cur.cell, nm: cur.name, dk: cur.key || cur.name, c: 0xf4f4f4, j: 0.05
         });
       }
     }
@@ -2942,6 +2942,35 @@ function itemIcon(cell, tex, cols, rows){
          '%;background-position:' + px + '% ' + py + '%;background-repeat:no-repeat';
 }
 
+// 2D 线段与 AABB 相交（用来判断商品是否被墙挡住）
+function segHitsBox(x0, z0, x1, z1, b){
+  var dx = x1 - x0, dz = z1 - z0;
+  var tmin = 0, tmax = 1;
+  for (var a = 0; a < 2; a++){
+    var p0 = a ? z0 : x0, d = a ? dz : dx;
+    var lo = a ? b.z0 : b.x0, hi = a ? b.z1 : b.x1;
+    if (Math.abs(d) < 1e-6){
+      if (p0 < lo || p0 > hi) return false;
+    } else {
+      var t1 = (lo - p0) / d, t2 = (hi - p0) / d;
+      if (t1 > t2){ var tt = t1; t1 = t2; t2 = tt; }
+      tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+      if (tmin > tmax) return false;
+    }
+  }
+  return true;
+}
+
+var WALL_TAGS = { back: 1, side: 1, front: 1, shopWall: 1, shopFront: 1 };
+function blockedByWall(px, pz, ix, iz){
+  for (var i = 0; i < COL.length; i++){
+    var b = COL[i];
+    if (!WALL_TAGS[b.tag]) continue;
+    if (segHitsBox(px, pz, ix, iz, b)) return true;
+  }
+  return false;
+}
+
 function registerPickList(arr, tex, kind, rebuild, yOf){
   var cols = (tex === TEX.liquor) ? 12 : 6;
   var rows = (tex === TEX.liquor) ? 2 : 4;
@@ -3031,6 +3060,7 @@ function updatePick(dt){
     var dot = (dx * dir.x + dy * dir.y + dz * dir.z) / (d || 1);
     var ang = Math.acos(Math.max(-1, Math.min(1, dot)));
     if (ang > PICK.maxAngle) continue;
+    if (d > 0.35 && blockedByWall(px, pz, it.x, it.z)) continue;   // 隔着墙不给提示
     var score = ang * 2.4 + d * 0.25;
     if (score < bestScore){ bestScore = score; best = it; }
   }
