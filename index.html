@@ -10,6 +10,33 @@
   html,body{width:100%;height:100%;overflow:hidden;background:#05070c;overscroll-behavior:none}
   body{font-family:-apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif;color:#eaf0f8;
        touch-action:none;user-select:none;-webkit-user-select:none}
+  /* ---------- 液态玻璃（Liquid Glass） ---------- */
+  .lg{position:relative;border:0;color:#eef5ff;
+      background:linear-gradient(150deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,.075) 36%,
+                 rgba(255,255,255,.05) 64%,rgba(255,255,255,.15) 100%);
+      -webkit-backdrop-filter:blur(16px) saturate(185%) brightness(1.14);
+      backdrop-filter:blur(16px) saturate(185%) brightness(1.14);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.20),
+        inset 0 1.5px 2px rgba(255,255,255,.85),
+        inset 0 -1px 1.5px rgba(255,255,255,.18),
+        inset 0 0 30px rgba(255,255,255,.07),
+        inset 0 0 0 1px rgba(255,255,255,.06),
+        0 10px 26px rgba(0,0,0,.36),
+        0 2px 7px rgba(0,0,0,.22);
+      transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,background .2s}
+  .lg::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+      background:radial-gradient(120% 95% at var(--gx,50%) var(--gy,-14%),
+                 rgba(255,255,255,.72),rgba(255,255,255,.06) 50%,transparent 66%);
+      mix-blend-mode:screen;opacity:.95;transition:background .25s linear}
+  .lg::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.10)}
+  .lg:active{transform:scale(.955);
+      box-shadow:0 0 0 1px rgba(255,255,255,.26),
+        inset 0 1px 2px rgba(255,255,255,.85),
+        inset 0 -1px 2px rgba(255,255,255,.12),
+        inset 0 0 30px rgba(255,255,255,.16),
+        0 4px 12px rgba(0,0,0,.34)}
   #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
   #vig{position:fixed;inset:0;pointer-events:none;z-index:2;
        background:radial-gradient(ellipse at 50% 48%,rgba(0,0,0,0) 42%,rgba(0,0,0,.55) 100%)}
@@ -17,21 +44,24 @@
        font-size:12px;letter-spacing:.08em;color:rgba(226,236,248,.6);line-height:1.7}
   #hud .big{font-size:15px;color:rgba(240,246,255,.9);font-variant-numeric:tabular-nums}
   #fps{font-size:11px;color:rgba(200,215,235,.35)}
-  #stick{position:fixed;left:22px;bottom:26px;width:126px;height:126px;z-index:6;
-         border-radius:50%;border:1px solid rgba(190,210,235,.16);
-         background:radial-gradient(circle,rgba(20,28,42,.42),rgba(10,14,22,.16));
-         backdrop-filter:blur(2px);opacity:.85;transition:opacity .2s}
-  #stick.on{opacity:1;border-color:rgba(190,215,245,.3)}
-  #knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;
-        border-radius:50%;background:radial-gradient(circle at 38% 34%,rgba(238,246,255,.62),rgba(150,175,205,.22));
-        border:1px solid rgba(220,235,255,.32);box-shadow:0 2px 10px rgba(0,0,0,.35);
+  #stick{position:fixed;left:22px;bottom:26px;width:130px;height:130px;z-index:6;
+         border-radius:50%;opacity:.9;transition:opacity .2s,transform .2s}
+  #stick.on{opacity:1}
+  #knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;
+        border-radius:50%;
+        background:
+          radial-gradient(circle at var(--kx,34%) var(--ky,30%),rgba(255,255,255,.92),rgba(255,255,255,.42) 34%,rgba(196,214,238,.22) 62%,rgba(255,255,255,.40) 100%);
+        box-shadow:
+          inset 0 1px 1px rgba(255,255,255,.95),
+          inset 0 -2px 3px rgba(120,150,190,.35),
+          inset 0 0 14px rgba(255,255,255,.28),
+          0 4px 12px rgba(0,0,0,.45),
+          0 0 0 1px rgba(255,255,255,.35);
         transition:transform .06s linear}
   #btns{position:fixed;right:18px;bottom:30px;z-index:6;display:flex;flex-direction:column;gap:10px}
-  #btns button{width:62px;height:62px;border-radius:50%;font-size:13px;letter-spacing:.06em;
-        color:#dce8f6;background:rgba(22,30,44,.55);border:1px solid rgba(180,205,235,.2);
-        backdrop-filter:blur(6px);font-family:inherit;transition:transform .12s,background .2s}
-  #btns button:active{transform:scale(.93);background:rgba(50,72,104,.7)}
-  #btns button.off{color:#8b98a8;border-color:rgba(140,155,175,.22)}
+  #btns button{width:64px;height:64px;border-radius:50%;font-size:13px;letter-spacing:.06em;
+        font-family:inherit;color:#eaf2ff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+  #btns button.off{color:rgba(200,214,230,.55)}
   #start{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
          align-items:center;justify-content:center;gap:12px;text-align:center;
          background:radial-gradient(ellipse at 50% 60%,rgba(6,10,18,.72),rgba(3,5,9,.94));
@@ -41,25 +71,32 @@
             color:#f2f7ff;text-shadow:0 0 26px rgba(140,180,255,.32)}
   #start .sub{font-size:13px;letter-spacing:.34em;color:#8fb8e0;margin-bottom:6px}
   #start .hint{font-size:12.5px;line-height:2;color:rgba(200,216,236,.62);margin-top:10px}
-  #btnStart{display:none;margin-top:16px;padding:13px 44px;border-radius:999px;font-size:15px;
-            letter-spacing:.2em;text-indent:.2em;color:#08111c;font-family:inherit;
-            background:linear-gradient(180deg,#f4e6cd,#d8b98d);border:none;
-            box-shadow:0 8px 30px rgba(240,210,160,.28),0 0 0 1px rgba(255,255,255,.2) inset}
-  #btnStart:active{transform:scale(.97)}
+  #btnStart{display:none;margin-top:18px;padding:15px 46px;border-radius:999px;font-size:15px;
+            letter-spacing:.2em;text-indent:.2em;font-family:inherit;color:#fff8ea;
+            text-shadow:0 1px 3px rgba(60,30,0,.45);
+            background:linear-gradient(150deg,rgba(255,226,182,.34) 0%,rgba(255,206,150,.16) 38%,
+                        rgba(255,255,255,.06) 66%,rgba(255,225,180,.24) 100%);
+            -webkit-backdrop-filter:blur(14px) saturate(180%) brightness(1.12);
+            backdrop-filter:blur(14px) saturate(180%) brightness(1.12);
+            box-shadow:0 0 0 1px rgba(255,232,196,.34),
+              inset 0 1px 1.5px rgba(255,255,255,.85),
+              inset 0 -1px 1.5px rgba(255,235,205,.22),
+              inset 0 0 26px rgba(255,222,170,.16),
+              0 12px 30px rgba(0,0,0,.4),
+              0 0 26px rgba(255,206,140,.18)}
   #loading{font-size:12.5px;color:rgba(190,210,235,.55);letter-spacing:.2em;margin-top:16px}
   #tip{position:fixed;left:50%;bottom:178px;transform:translateX(-50%);z-index:6;
-       font-size:12.5px;letter-spacing:.1em;color:rgba(226,238,252,.72);
-       background:rgba(10,16,26,.42);border:1px solid rgba(170,200,235,.14);
-       padding:8px 16px;border-radius:999px;backdrop-filter:blur(6px);
-       opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:normal;max-width:86vw;text-align:center;line-height:1.5}
+       font-size:12.5px;letter-spacing:.1em;color:rgba(238,246,255,.88);
+       padding:9px 18px;border-radius:999px;
+       opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:normal;
+       max-width:86vw;text-align:center;line-height:1.5}
   #tip.on{opacity:1}
   /* 竖屏时用 CSS 把整个游戏转 90°，微信这种锁竖屏的浏览器也能横着玩 */
   body.land{width:100vh;height:100vw;position:fixed;top:0;left:0;overflow:hidden;
             transform-origin:0 0;transform:translate(100vw,0) rotate(90deg)}
   #rotip{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:26;
-         padding:9px 18px;border-radius:999px;font-size:12.5px;letter-spacing:.12em;
-         color:rgba(232,242,255,.85);background:rgba(12,18,28,.55);
-         border:1px solid rgba(170,200,235,.16);backdrop-filter:blur(6px);
+         padding:10px 20px;border-radius:999px;font-size:12.5px;letter-spacing:.12em;
+         color:rgba(238,246,255,.9);
          opacity:0;transition:opacity .5s;pointer-events:none;white-space:nowrap}
   #rotip.on{opacity:1}
   #err{position:fixed;left:8px;bottom:4px;z-index:30;font-size:10px;color:#ff8080;
@@ -77,10 +114,10 @@
   <div id="fps"></div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
-<div id="stick"><div id="knob"></div></div>
+<div id="stick" class="lg"><div id="knob"></div></div>
 <div id="btns">
-  <button id="btnView">视角</button>
-  <button id="btnSound">音效</button>
+  <button id="btnView" class="lg">视角</button>
+  <button id="btnSound" class="lg">音效</button>
 </div>
 <div id="start">
   <h1>雨夜便利店</h1>
@@ -89,8 +126,8 @@
   <button id="btnStart">进 入 夜 色</button>
   <div id="loading">正在生成场景…</div>
 </div>
-<div id="tip">走近玻璃门，门会自动打开 · 店里有货架和收银台</div>
-<div id="rotip">已切横屏 · 把手机转过来</div>
+<div id="tip" class="lg">走近玻璃门，门会自动打开 · 店里有货架和收银台</div>
+<div id="rotip" class="lg">已切横屏 · 把手机转过来</div>
 <div id="err"></div>
 <script>
 window.__LOG = [];
@@ -2552,6 +2589,9 @@ function bindStick(){
     var lim = R;
     if (d > lim){ dx *= lim / d; dy *= lim / d; d = lim; }
     knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    // 液态玻璃：高光跟着手指的偏移量走
+    knob.style.setProperty('--kx', (34 + dx / lim * 18).toFixed(1) + '%');
+    knob.style.setProperty('--ky', (30 + dy / lim * 18).toFixed(1) + '%');
     INPUT.jx = dx / lim;
     INPUT.jy = -dy / lim;
     INPUT.run = d > lim * 0.86;
@@ -2561,6 +2601,7 @@ function bindStick(){
     if (e.pointerId !== active) return;
     active = null; INPUT.touchStick = false;
     knob.style.transform = 'translate(0px,0px)';
+    knob.style.setProperty('--kx', '34%'); knob.style.setProperty('--ky', '30%');
     INPUT.jx = 0; INPUT.jy = 0; INPUT.run = false;
     base.classList.remove('on');
   }
@@ -2784,6 +2825,21 @@ function boot(){
   camera.layers.enable(3);
   bindStick();
   bindLook();
+
+  // 液态玻璃：手机一倾斜，玻璃上的高光就跟着走
+  try {
+    var setTilt = function(gx, gy){
+      var root = document.documentElement.style;
+      root.setProperty('--gx', (50 + gx * 26).toFixed(1) + '%');
+      root.setProperty('--gy', (50 - gy * 26).toFixed(1) + '%');
+    };
+    window.addEventListener('deviceorientation', function(e){
+      if (e.gamma == null && e.beta == null) return;
+      var gx = clamp((e.gamma || 0) / 40, -1, 1);
+      var gy = clamp(((e.beta || 45) - 45) / 40, -1, 1);
+      setTilt(gx, gy);
+    });
+  } catch(e){}
   setInterval(tabBeat, 3000);
   try { localStorage.removeItem('akari_tabs'); } catch(e){}
 
