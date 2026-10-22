@@ -400,6 +400,212 @@ function texSnackAtlas(){
   t.magFilter = THREE.LinearFilter;
   TEX.snack = t;
 }
+// ===== p1c 烟酒图集：按真实烟盒/酒瓶配色画的像素风包装 =====
+var TOB = { cols: 6, rows: 4, cw: 120, ch: 160, list: [] };
+var LIQ = { cols: 6, rows: 2, cw: 120, ch: 200, list: [] };
+var TOB_ATLAS = { cols: 6, rows: 4, plainCell: [5, 3] };
+var LIQ_ATLAS = { cols: 6, rows: 2, plainCell: [5, 1] };
+
+// 一条烟的警示语块（烟盒下三分之一那块白底红字）
+function drawWarnBox(x, px, py, w, h){
+  x.fillStyle = '#f6f6f2';
+  x.fillRect(px, py, w, h);
+  x.strokeStyle = 'rgba(40,40,40,.75)';
+  x.lineWidth = 1.5;
+  x.strokeRect(px + 1, py + 1, w - 2, h - 2);
+  // 用细线暗示三行小字
+  x.strokeStyle = 'rgba(60,60,60,.55)';
+  x.lineWidth = 2;
+  for (var i = 0; i < 3; i++){
+    var yy = py + h * (0.26 + i * 0.22);
+    var ww = w * (0.86 - (i === 2 ? 0.26 : 0));
+    x.beginPath(); x.moveTo(px + w * 0.07, yy); x.lineTo(px + w * 0.07 + ww, yy); x.stroke();
+  }
+}
+
+// 一包烟：底色调 + 顶部锡纸 + 徽记 + 品名 + 警示语块
+function drawCig(x, px, py, W, H, d){
+  x.fillStyle = d.bg; x.fillRect(px, py, W, H);
+
+  // 侧边折痕（让烟盒有点立体感）
+  x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(px, py, W * 0.07, H);
+  x.fillStyle = 'rgba(255,255,255,.13)'; x.fillRect(px + W * 0.07, py, W * 0.05, H);
+
+  // 顶部锡纸
+  x.fillStyle = d.foil || '#d9d9d9';
+  x.fillRect(px, py, W, H * 0.085);
+  x.fillStyle = 'rgba(0,0,0,.16)'; x.fillRect(px, py + H * 0.085, W, 3);
+
+  // 品牌徽记
+  var cx = px + W * 0.5, cy = py + H * 0.30;
+  if (d.emblem === 'star'){
+    x.fillStyle = d.acc; x.beginPath(); x.arc(cx, cy, W * 0.17, 0, 6.283); x.fill();
+    x.fillStyle = d.acc2 || '#f7e6a8';
+    for (var s = 0; s < 5; s++){
+      var a = -Math.PI / 2 + s * 2.513;
+      x.beginPath(); x.arc(cx + Math.cos(a) * W * 0.075, cy + Math.sin(a) * W * 0.075, W * 0.028, 0, 6.283); x.fill();
+    }
+  } else if (d.emblem === 'pagoda'){
+    x.fillStyle = d.acc2 || '#f2e8cf';
+    x.beginPath();
+    x.moveTo(cx, cy - H * 0.1); x.lineTo(cx + W * 0.15, cy + H * 0.03);
+    x.lineTo(cx - W * 0.15, cy + H * 0.03); x.closePath(); x.fill();
+    x.fillRect(cx - W * 0.09, cy + H * 0.03, W * 0.18, H * 0.035);
+    x.fillRect(cx - W * 0.12, cy + H * 0.065, W * 0.24, H * 0.02);
+  } else if (d.emblem === 'moon'){
+    x.fillStyle = d.acc; x.beginPath(); x.arc(cx, cy, W * 0.15, 0, 6.283); x.fill();
+    x.fillStyle = d.bg; x.beginPath(); x.arc(cx + W * 0.06, cy - W * 0.03, W * 0.13, 0, 6.283); x.fill();
+  } else if (d.emblem === 'wave'){
+    x.strokeStyle = d.acc; x.lineWidth = 4;
+    for (var w2 = 0; w2 < 3; w2++){
+      x.beginPath();
+      x.moveTo(cx - W * 0.18, cy - 8 + w2 * 9);
+      x.bezierCurveTo(cx - W * 0.06, cy - 16 + w2 * 9, cx + W * 0.06, cy + w2 * 9, cx + W * 0.18, cy - 8 + w2 * 9);
+      x.stroke();
+    }
+  }
+
+  // 品名
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = d.fg;
+  var fs = Math.round(W * (d.name.length > 3 ? 0.155 : (d.name.length === 3 ? 0.19 : 0.23)));
+  x.font = 'bold ' + fs + 'px "Noto Sans CJK JP","Noto Sans JP",sans-serif';
+  x.fillText(d.name, cx, py + H * 0.50);
+  // 拼音小字
+  x.globalAlpha = 0.85;
+  x.font = 'bold ' + Math.round(W * 0.062) + 'px sans-serif';
+  x.fillText(d.rom || '', cx, py + H * 0.565);
+  x.globalAlpha = 1;
+
+  // 金/银边
+  x.strokeStyle = d.border || 'rgba(255,255,255,.30)';
+  x.lineWidth = 2;
+  x.strokeRect(px + 1.5, py + 1.5, W - 3, H - 3);
+
+  // 警示语
+  drawWarnBox(x, px + W * 0.06, py + H * 0.63, W * 0.88, H * 0.33);
+}
+
+function texTobacco(){
+  var W = TOB.cw, H = TOB.ch, COLS = TOB.cols, ROWS = TOB.rows;
+  var c = mkCanvas(W * COLS, H * ROWS), x = c.getContext('2d');
+  x.fillStyle = '#6c7178'; x.fillRect(0, 0, c.width, c.height);
+
+  var defs = [
+    { name: '中华', rom: 'CHUNGHWA', bg: '#c62828', fg: '#f7e6a8', accent: '#8e1c1c', emblem: 'star', acc: '#8e1c1c', acc2: '#f7e6a8', border: 'rgba(247,230,168,.75)' },
+    { name: '红塔山', rom: 'HONGTA', bg: '#b71c1c', fg: '#ffffff', accent: '#7d1010', emblem: 'pagoda', acc2: '#f2e8cf', border: 'rgba(255,255,255,.45)' },
+    { name: '玉溪', rom: 'YUXI', bg: '#c0392b', fg: '#f3d98b', accent: '#8a1f16', emblem: 'wave', acc: '#f3d98b', border: 'rgba(243,217,139,.7)' },
+    { name: '云烟', rom: 'YUNYAN', bg: '#5f2a86', fg: '#f2d98c', accent: '#3d1a5c', emblem: 'moon', acc: '#f2d98c', border: 'rgba(242,217,140,.7)' },
+    { name: '云烟', rom: 'YUNYAN SOFT', bg: '#f2efe6', fg: '#b03028', accent: '#d8d2c4', emblem: 'star', acc: '#b03028', acc2: '#f2efe6', border: 'rgba(176,48,40,.55)' },
+    { name: '利群', rom: 'LIQUN', bg: '#d9d4c6', fg: '#9e231e', accent: '#b9b2a1', emblem: 'moon', acc: '#9e231e', border: 'rgba(158,35,30,.5)' },
+    { name: '利群', rom: 'LIQUN SUNSHINE', bg: '#191a1e', fg: '#d9b96a', accent: '#000', emblem: 'star', acc: '#d9b96a', acc2: '#191a1e', border: 'rgba(217,185,106,.8)' },
+    { name: '泰山', rom: 'TAISHAN', bg: '#1b6d88', fg: '#ffffff', accent: '#0d4a5e', emblem: 'wave', acc: '#bfe8f2', border: 'rgba(191,232,242,.6)' },
+    { name: '黄鹤楼', rom: 'HUANGHELOU', bg: '#1b4f9c', fg: '#f2d98c', accent: '#123670', emblem: 'pagoda', acc2: '#f2d98c', border: 'rgba(242,217,140,.7)' },
+    { name: '芙蓉王', rom: 'FURONGWANG', bg: '#16305c', fg: '#e8c86a', accent: '#0d1e3c', emblem: 'star', acc: '#e8c86a', acc2: '#16305c', border: 'rgba(232,200,106,.75)' },
+    { name: '南京', rom: 'NANJING', bg: '#a92a2a', fg: '#f0d79a', accent: '#7c1b1b', emblem: 'wave', acc: '#f0d79a', border: 'rgba(240,215,154,.7)' },
+    { name: '双喜', rom: 'SHUANGXI', bg: '#c62f2f', fg: '#ffe9b8', accent: '#8f1c1c', emblem: 'star', acc: '#ffe9b8', acc2: '#c62f2f', border: 'rgba(255,233,184,.65)' },
+    { name: '七匹狼', rom: 'SEPTWOLVES', bg: '#868a92', fg: '#ffffff', accent: '#5c6067', emblem: 'wave', acc: '#dfe3e8', border: 'rgba(223,227,232,.55)' },
+    { name: '黄金叶', rom: 'GOLDENLEAF', bg: '#c9a227', fg: '#402a08', accent: '#96760f', emblem: 'moon', acc: '#7a5c05', border: 'rgba(64,42,8,.5)' },
+    { name: '白沙', rom: 'BAISHA', bg: '#f2efe6', fg: '#1f4f8f', accent: '#cfc9b8', emblem: 'wave', acc: '#1f4f8f', border: 'rgba(31,79,143,.5)' },
+    { name: '苏烟', rom: 'SUYAN', bg: '#6b1f2a', fg: '#e8c86a', accent: '#460f16', emblem: 'star', acc: '#e8c86a', acc2: '#6b1f2a', border: 'rgba(232,200,106,.7)' },
+    { name: '钻石', rom: 'DIAMOND', bg: '#2c6e49', fg: '#ffffff', accent: '#1a4a2f', emblem: 'wave', acc: '#c8f0d4', border: 'rgba(200,240,212,.55)' },
+    { name: '娇子', rom: 'JIAOZI', bg: '#2a2a35', fg: '#ff8fb1', accent: '#15151c', emblem: 'moon', acc: '#ff8fb1', border: 'rgba(255,143,177,.6)' }
+  ];
+
+  TOB.list = [];
+  for (var i = 0; i < defs.length; i++){
+    var col = i % COLS, row = (i / COLS) | 0;
+    drawCig(x, col * W, row * H, W, H, defs[i]);
+    TOB.list.push({ name: defs[i].name, cell: [col, row], kind: 'cig' });
+  }
+  // 空格子（用于盒子其它面）
+  x.fillStyle = '#9aa0a8';
+  x.fillRect((COLS - 1) * W, (ROWS - 1) * H, W, H);
+
+  var t = new THREE.CanvasTexture(c);
+  t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+  TEX.tobacco = t;
+}
+
+// 酒瓶：透明底 + 瓶身 + 标签
+function drawBottle(x, px, py, W, H, d){
+  var cx = px + W / 2;
+  function roundRect(rx, ry, rw, rh, r){
+    x.beginPath();
+    x.moveTo(rx + r, ry);
+    x.arcTo(rx + rw, ry, rx + rw, ry + rh, r);
+    x.arcTo(rx + rw, ry + rh, rx, ry + rh, r);
+    x.arcTo(rx, ry + rh, rx, ry, r);
+    x.arcTo(rx, ry, rx + rw, ry, r);
+    x.closePath();
+  }
+  // 瓶身
+  x.fillStyle = d.glass;
+  roundRect(px + W * 0.20, py + H * 0.34, W * 0.60, H * 0.62, W * 0.10);
+  x.fill();
+  // 瓶肩
+  x.beginPath();
+  x.moveTo(px + W * 0.20, py + H * 0.40);
+  x.quadraticCurveTo(px + W * 0.30, py + H * 0.30, cx - W * 0.06, py + H * 0.28);
+  x.lineTo(cx + W * 0.06, py + H * 0.28);
+  x.quadraticCurveTo(px + W * 0.70, py + H * 0.30, px + W * 0.80, py + H * 0.40);
+  x.closePath(); x.fill();
+  // 瓶颈
+  x.fillRect(cx - W * 0.055, py + H * 0.14, W * 0.11, H * 0.15);
+  // 瓶盖
+  x.fillStyle = d.cap;
+  x.fillRect(cx - W * 0.075, py + H * 0.09, W * 0.15, H * 0.06);
+  x.fillStyle = 'rgba(255,255,255,.25)';
+  x.fillRect(cx - W * 0.075, py + H * 0.09, W * 0.15, H * 0.015);
+
+  // 高光
+  x.fillStyle = 'rgba(255,255,255,.22)';
+  x.fillRect(px + W * 0.26, py + H * 0.42, W * 0.06, H * 0.46);
+
+  // 标签
+  x.fillStyle = d.label;
+  x.fillRect(px + W * 0.20, py + H * 0.55, W * 0.60, H * 0.26);
+  x.fillStyle = d.labelTrim || 'rgba(255,255,255,.35)';
+  x.fillRect(px + W * 0.20, py + H * 0.55, W * 0.60, H * 0.018);
+  x.fillRect(px + W * 0.20, py + H * 0.79, W * 0.60, H * 0.018);
+
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = d.fg;
+  x.font = 'bold ' + Math.round(W * (d.name.length > 2 ? 0.155 : 0.20)) + 'px "Noto Sans CJK JP",sans-serif';
+  x.fillText(d.name, cx, py + H * 0.665);
+  x.globalAlpha = 0.8;
+  x.font = 'bold ' + Math.round(W * 0.062) + 'px sans-serif';
+  x.fillText(d.rom || '', cx, py + H * 0.735);
+  x.globalAlpha = 1;
+}
+
+function texLiquor(){
+  var W = LIQ.cw, H = LIQ.ch, COLS = LIQ.cols, ROWS = LIQ.rows;
+  var c = mkCanvas(W * COLS, H * ROWS), x = c.getContext('2d');
+  var defs = [
+    { name: '茅台', rom: 'MOUTAI', glass: '#f3f0e6', cap: '#c9a227', label: '#b3261e', fg: '#f7e6a8' },
+    { name: '五粮液', rom: 'WULIANGYE', glass: '#e9eef2', cap: '#d8d8d8', label: '#c02a24', fg: '#ffffff' },
+    { name: '泸州', rom: 'LUZHOU', glass: '#b7292b', cap: '#e0c070', label: '#f0d79a', fg: '#8b1a12' },
+    { name: '汾酒', rom: 'FENJIU', glass: '#dfe9f2', cap: '#1f5fa8', label: '#1f5fa8', fg: '#ffffff' },
+    { name: '洋河', rom: 'YANGHE', glass: '#1f4f9c', cap: '#c9a227', label: '#1f4f9c', fg: '#f7e6a8' },
+    { name: '剑南春', rom: 'JIANNANCHUN', glass: '#e8dfc8', cap: '#b3261e', label: '#c02a24', fg: '#f7e6a8' },
+    { name: '牛栏山', rom: 'NIULANSHAN', glass: '#2f6b3a', cap: '#d8c27a', label: '#e8e2cf', fg: '#2f6b3a' },
+    { name: '江小白', rom: 'JIANGXIAOBAI', glass: '#f2f4f6', cap: '#3f8fd0', label: '#ffffff', fg: '#2a5a8a' },
+    { name: '青岛', rom: 'TSINGTAO', glass: '#1f6b45', cap: '#c9a227', label: '#f2e4c0', fg: '#1f5b33' },
+    { name: '崂山', rom: 'LAOSHAN', glass: '#1b5f9c', cap: '#d8d8d8', label: '#f2f6fa', fg: '#1b5f9c' },
+    { name: '雪花', rom: 'SNOW', glass: '#dce8f2', cap: '#1f6fd0', label: '#1f6fd0', fg: '#ffffff' },
+    { name: '燕京', rom: 'YANJING', glass: '#2b6b3f', cap: '#b3261e', label: '#f0d79a', fg: '#8b1a12' }
+  ];
+  LIQ.list = [];
+  for (var i = 0; i < defs.length; i++){
+    var col = i % COLS, row = (i / COLS) | 0;
+    drawBottle(x, col * W, row * H, W, H, defs[i]);
+    LIQ.list.push({ name: defs[i].name, cell: [col, row], kind: 'liq' });
+  }
+  var t = new THREE.CanvasTexture(c);
+  t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+  TEX.liquor = t;
+}
 // ===== p2 核心：渲染器 / 天空 / 灯光 / 地面 / 碰撞体 =====
 var canvas = document.getElementById('c');
 var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: 'high-performance' });
@@ -422,7 +628,8 @@ var LAY = {
   ST_X0: -4.6, ST_X1: 4.6, ST_Z0: -13.0, ST_Z1: -6.0, ST_H: 4.30,
   DOOR_X0: -1.05, DOOR_X1: 1.05,
   SIDE_Z0: -6.45, SIDE_Z1: -2.55, SIDE_H: 0.02,
-  BOUND: { x0: -16, x1: 16, z0: -13.6, z1: 11 }
+  SHOP: { X0: 6.6, X1: 13.6, Z0: -12.6, Z1: -6.0, H: 4.0, DX0: 9.30, DX1: 10.70 },
+  BOUND: { x0: -16, x1: 17.2, z0: -13.6, z1: 11 }
 };
 
 // ---------- 碰撞体（俯视 AABB） ----------
@@ -515,7 +722,7 @@ function buildLights(){
 
   // 自动售货机
   var vm = new THREE.PointLight(0xffe6bd, 0.55, 5.5, 2.0);
-  vm.position.set(6.1, 1.35, -5.4);
+  vm.position.set(5.55, 1.35, -5.4);
   scene.add(vm);
 }
 var LIGHTS = {};
@@ -780,7 +987,8 @@ function addGlow(x, y, z, w, h, color, strength, rotY){
 
 // 带贴图的盒子批处理：±Z 面用商品标签，其余面用纯色格
 var UNIT_UV = UNIT.attributes.uv.array;
-function batchLabeled(items){
+function batchLabeled(items, AT){
+  AT = AT || ATLAS;
   var n = items.length;
   if (!n) return null;
   var vn = n * 24;
@@ -788,8 +996,8 @@ function batchLabeled(items){
   var uvs = new Float32Array(vn * 2), col = new Float32Array(vn * 3);
   var idx = vn > 65000 ? new Uint32Array(n * 36) : new Uint16Array(n * 36);
   var C = new THREE.Color();
-  var cw = 1 / ATLAS.cols, ch = 1 / ATLAS.rows, mx = cw * 0.012, my = ch * 0.012;
-  var pc = ATLAS.plainCell || [ATLAS.cols - 1, ATLAS.rows - 1];
+  var cw = 1 / AT.cols, ch = 1 / AT.rows, mx = cw * 0.012, my = ch * 0.012;
+  var pc = AT.plainCell || [AT.cols - 1, AT.rows - 1];
   var pu0 = pc[0] * cw + mx, pv0 = 1 - (pc[1] + 1) * ch + my;
   for (var i = 0; i < n; i++){
     var it = items[i];
@@ -821,6 +1029,58 @@ function batchLabeled(items){
       }
     }
     for (var k = 0; k < 36; k++) idx[oi + k] = UI[k] + i * 24;
+  }
+  var g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setIndex(new THREE.BufferAttribute(idx, 1));
+  g.computeBoundingSphere();
+  return g;
+}
+
+
+// 交叉面片批处理：两片互相垂直的透明面，做酒瓶这种「从哪看都像瓶子」的东西
+function batchBillboard(items, AT){
+  var n = items.length;
+  if (!n) return null;
+  var quads = n * 2, verts = quads * 4;
+  var pos = new Float32Array(verts * 3), nor = new Float32Array(verts * 3);
+  var uvs = new Float32Array(verts * 2), col = new Float32Array(verts * 3);
+  var idx = verts > 65000 ? new Uint32Array(quads * 6) : new Uint16Array(quads * 6);
+  var cw = 1 / AT.cols, ch = 1 / AT.rows, mx = cw * 0.006, my = ch * 0.006;
+  var C = new THREE.Color();
+  for (var i = 0; i < n; i++){
+    var it = items[i];
+    var w = it.w || 0.2, h = it.h || 0.3;
+    var cell = it.cell || [0, 0];
+    var u0 = cell[0] * cw + mx, v0 = 1 - (cell[1] + 1) * ch + my;
+    var uw = cw - 2 * mx, vh = ch - 2 * my;
+    C.set(it.c === undefined ? 0xffffff : it.c);
+    var f = 1 + (Math.random() - 0.5) * (it.j === undefined ? 0.05 : it.j);
+    for (var q = 0; q < 2; q++){
+      var ang = (it.ry || 0) + q * Math.PI / 2;
+      var cs = Math.cos(ang), sn = Math.sin(ang);
+      var vbase = (i * 2 + q) * 4, ibase = (i * 2 + q) * 6;
+      var cx4 = [-w / 2, w / 2, w / 2, -w / 2];
+      var cy4 = [0, 0, h, h];
+      var cu4 = [0, 1, 1, 0];
+      var cv4 = [0, 0, 1, 1];
+      for (var v = 0; v < 4; v++){
+        var vx = cx4[v] * cs, vz = -cx4[v] * sn;
+        var o = (vbase + v) * 3, ou = (vbase + v) * 2;
+        pos[o] = vx + it.x;
+        pos[o + 1] = cy4[v] + it.y;
+        pos[o + 2] = vz + it.z;
+        nor[o] = sn; nor[o + 1] = 0; nor[o + 2] = cs;
+        uvs[ou] = u0 + cu4[v] * uw;
+        uvs[ou + 1] = v0 + cv4[v] * vh;
+        col[o] = C.r * f; col[o + 1] = C.g * f; col[o + 2] = C.b * f;
+      }
+      idx[ibase] = vbase; idx[ibase + 1] = vbase + 1; idx[ibase + 2] = vbase + 2;
+      idx[ibase + 3] = vbase; idx[ibase + 4] = vbase + 2; idx[ibase + 5] = vbase + 3;
+    }
   }
   var g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -1072,6 +1332,272 @@ function makePerson(jacket, pants, scale){
   g.userData = { armL: armL, armR: armR, legL: legL, legR: legR, torso: torso, head: head };
   return g;
 }
+// ===== p4b 烟酒店：名烟名酒 =====
+var SHOP = { doorPanes: [], openAmt: 0, awnRect: null, signTex: null };
+
+function shopSignTex(){
+  var c = mkCanvas(1024, 200), x = c.getContext('2d');
+  x.fillStyle = '#7d1a16'; x.fillRect(0, 0, 1024, 200);
+  var g = x.createLinearGradient(0, 0, 0, 200);
+  g.addColorStop(0, 'rgba(255,220,150,.22)');
+  g.addColorStop(0.5, 'rgba(255,220,150,0)');
+  g.addColorStop(1, 'rgba(0,0,0,.25)');
+  x.fillStyle = g; x.fillRect(0, 0, 1024, 200);
+  x.strokeStyle = '#d8b46a'; x.lineWidth = 6; x.strokeRect(14, 14, 996, 172);
+  x.fillStyle = '#f0d394';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = 'bold 104px "Noto Sans CJK JP","Noto Sans JP",sans-serif';
+  x.fillText('名 烟 名 酒', 512, 96);
+  x.fillStyle = '#e8c07a';
+  x.font = 'bold 26px sans-serif';
+  x.fillText('CIGARETTE  &  LIQUOR', 512, 160);
+  var t = new THREE.CanvasTexture(c);
+  t.encoding = THREE.sRGBEncoding; t.anisotropy = 8;
+  return t;
+}
+
+function buildShop(){
+  var SH = LAY.SHOP, y0 = LAY.SIDE_H;
+  var cx = (SH.X0 + SH.X1) / 2, cz = (SH.Z0 + SH.Z1) / 2;
+  var w = SH.X1 - SH.X0, d = SH.Z1 - SH.Z0;
+
+  var woodMat = new THREE.MeshLambertMaterial({ color: 0x2a1e18 });
+  var innerMat = new THREE.MeshLambertMaterial({ color: 0x3b2a20 });
+  var trimMat = new THREE.MeshLambertMaterial({ color: 0x1a1411 });
+
+  function box(w2, h2, d2, x, y, z, mat, shadow){
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w2, h2, d2), mat);
+    m.position.set(x, y, z);
+    if (shadow !== false){ m.castShadow = true; m.receiveShadow = true; }
+    scene.add(m); return m;
+  }
+
+  // ---- 墙体 ----
+  var wallH = SH.H - y0;
+  box(w, wallH, 0.2, cx, y0 + wallH / 2, SH.Z0, woodMat);
+  box(0.2, wallH, d, SH.X0, y0 + wallH / 2, cz, woodMat);
+  box(0.2, wallH, d, SH.X1, y0 + wallH / 2, cz, woodMat);
+  box(w - 0.4, 0.14, d - 0.4, cx, SH.H - 0.3, cz, innerMat, false);
+  box(w + 0.6, 0.26, d + 0.6, cx, SH.H + 0.05, cz, trimMat);
+
+  box(w - 0.44, wallH - 0.2, 0.02, cx, y0 + wallH / 2, SH.Z0 + 0.12, innerMat, false);
+  box(0.02, wallH - 0.2, d - 0.3, SH.X0 + 0.12, y0 + wallH / 2, cz, innerMat, false);
+  box(0.02, wallH - 0.2, d - 0.3, SH.X1 - 0.12, y0 + wallH / 2, cz, innerMat, false);
+
+  // ---- 立面 ----
+  var glassMat = new THREE.MeshStandardMaterial({
+    color: 0x8fb6c8, roughness: 0.06, metalness: 0.35,
+    transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthWrite: false
+  });
+  function paneP(pw, ph, px, py){
+    var m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), glassMat);
+    m.position.set(px, py, SH.Z1); scene.add(m);
+  }
+  paneP(SH.DX0 - SH.X0 - 0.1, 2.45, (SH.X0 + SH.DX0) / 2, y0 + 1.30);
+  paneP(SH.X1 - SH.DX1 - 0.1, 2.45, (SH.DX1 + SH.X1) / 2, y0 + 1.30);
+
+  var mull = [];
+  var xs = [SH.X0, 7.9, SH.DX0, SH.DX1, 12.2, SH.X1];
+  for (var i = 0; i < xs.length; i++) mull.push({ x: xs[i], y: y0 + 1.30, z: SH.Z1, w: 0.055, h: 2.56, d: 0.08, c: 0xb39a68, j: 0.04 });
+  mull.push({ x: cx, y: y0 + 2.50, z: SH.Z1, w: w, h: 0.1, d: 0.1, c: 0x9c8558, j: 0.04 });
+  mull.push({ x: cx, y: y0 + 0.06, z: SH.Z1, w: w, h: 0.12, d: 0.12, c: 0x6d7178, j: 0.04 });
+  var mullMesh = new THREE.Mesh(batchBoxes(mull), new THREE.MeshLambertMaterial({ vertexColors: true }));
+  mullMesh.castShadow = true; scene.add(mullMesh);
+
+  addCol(SH.X0, SH.DX0, SH.Z1 - 0.12, SH.Z1 + 0.12, 'shopFront');
+  addCol(SH.DX1, SH.X1, SH.Z1 - 0.12, SH.Z1 + 0.12, 'shopFront');
+  addCol(SH.X0 - 0.1, SH.X0 + 0.1, SH.Z0, SH.Z1, 'shopWall');
+  addCol(SH.X1 - 0.1, SH.X1 + 0.1, SH.Z0, SH.Z1, 'shopWall');
+  addCol(SH.X0, SH.X1, SH.Z0 - 0.1, SH.Z0 + 0.1, 'shopWall');
+
+  // ---- 自动门 ----
+  var doorG = new THREE.Group(); scene.add(doorG);
+  for (var s = 0; s < 2; s++){
+    var dir = s === 0 ? -1 : 1;
+    var pg = new THREE.Group();
+    var gm = new THREE.Mesh(new THREE.PlaneGeometry(0.68, 2.4), glassMat);
+    gm.position.set(dir * 0.35, y0 + 1.24, 0); pg.add(gm);
+    var fr = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.05, 0.07), new THREE.MeshLambertMaterial({ color: 0xc8a86a }));
+    fr.position.set(dir * 0.35, y0 + 2.46, 0); pg.add(fr);
+    var fr2 = fr.clone(); fr2.position.y = y0 + 0.06; pg.add(fr2);
+    var fr3 = new THREE.Mesh(new THREE.BoxGeometry(0.035, 2.4, 0.07), new THREE.MeshLambertMaterial({ color: 0xc8a86a }));
+    fr3.position.set(dir * 0.70, y0 + 1.24, 0); pg.add(fr3);
+    pg.position.set(0, 0, SH.Z1);
+    pg.userData.dir = dir;
+    doorG.add(pg);
+    SHOP.doorPanes.push(pg);
+  }
+
+  // ---- 招牌 ----
+  SHOP.signTex = shopSignTex();
+  var signMat = new THREE.MeshBasicMaterial({ map: SHOP.signTex });
+  var signBox = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.92, 0.14),
+    [trimMat, trimMat, trimMat, trimMat, signMat, trimMat]);
+  signBox.position.set(cx, y0 + 3.10, SH.Z1 + 0.08);
+  scene.add(signBox);
+  addGlow(cx, y0 + 3.10, SH.Z1 + 0.3, w * 0.9, 2.4, 0xffcf94, 0.38);
+  var vs = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.5, 0.7),
+    [signMat, signMat, trimMat, trimMat, trimMat, trimMat]);
+  vs.position.set(SH.X1 + 0.22, y0 + 2.7, SH.Z1 - 1.6);
+  scene.add(vs);
+  addGlow(SH.X1 + 0.42, y0 + 2.7, SH.Z1 - 1.6, 2.4, 2.4, 0xffcf94, 0.3, Math.PI / 2);
+
+  // 雨棚
+  var awn = new THREE.Mesh(new THREE.BoxGeometry(w + 0.4, 0.1, 1.3), new THREE.MeshLambertMaterial({ color: 0x241a14 }));
+  awn.position.set(cx, y0 + 2.62, SH.Z1 + 0.62); awn.castShadow = true; scene.add(awn);
+  addGlow(cx, y0 + 2.44, SH.Z1 + 0.8, 4.6, 1.4, 0xffbe78, 0.28);
+  SHOP.awnRect = { x0: SH.X0 - 0.2, x1: SH.X1 + 0.2, z0: SH.Z1, z1: SH.Z1 + 1.3 };
+
+  // ---- 地面 / 天花灯 ----
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(w - 0.24, d - 0.24),
+    new THREE.MeshStandardMaterial({ map: TEX.tile, color: 0xcfc6b4, roughness: 0.42, metalness: 0.08 }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(cx, y0 + 0.014, cz);
+  floor.receiveShadow = true; floor.layers.set(1);
+  scene.add(floor);
+
+  var lightY = SH.H - 0.55;
+  for (var li = 0; li < 3; li++){
+    var panel = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.34),
+      new THREE.MeshBasicMaterial({ color: 0xffeccd }));
+    panel.rotation.x = Math.PI / 2;
+    panel.position.set(SH.X0 + 1.4 + li * 2.4, lightY, cz - 0.6);
+    scene.add(panel);
+  }
+  var l1 = new THREE.PointLight(0xffc98a, 1.05, 12, 2.0); l1.position.set(cx - 1.2, 3.0, cz + 1.6); scene.add(l1);
+  var l2 = new THREE.PointLight(0xffc98a, 0.95, 12, 2.0); l2.position.set(cx + 1.6, 3.0, cz - 2.0); scene.add(l2);
+  var l3 = new THREE.PointLight(0xffd8a8, 0.7, 9, 2.0); l3.position.set(cx, 2.6, SH.Z0 + 0.9); scene.add(l3);
+
+  // ---- 后墙：香烟陈列柜 ----
+  var caseX0 = SH.X0 + 0.35, caseX1 = SH.X1 - 0.35;
+  var caseZ = SH.Z0 + 0.24;
+  box(caseX1 - caseX0, 2.55, 0.30, (caseX0 + caseX1) / 2, y0 + 1.75, caseZ, new THREE.MeshLambertMaterial({ color: 0x241a13 }));
+  var back = new THREE.Mesh(new THREE.PlaneGeometry(caseX1 - caseX0 - 0.2, 1.95),
+    new THREE.MeshBasicMaterial({ color: 0xa07a4e }));
+  back.position.set((caseX0 + caseX1) / 2, y0 + 1.9, caseZ + 0.16);
+  scene.add(back);
+  addGlow((caseX0 + caseX1) / 2, y0 + 1.9, caseZ + 0.26, 7.6, 2.6, 0xffd0a0, 0.22);
+  var caseGlass = new THREE.Mesh(new THREE.PlaneGeometry(caseX1 - caseX0 - 0.1, 2.1), glassMat);
+  caseGlass.position.set((caseX0 + caseX1) / 2, y0 + 1.88, caseZ + 0.55);
+  scene.add(caseGlass);
+  addCol(caseX0 - 0.05, caseX1 + 0.05, SH.Z0, caseZ + 0.58, 'shopCase');
+
+  // 烟包：5 排 × 22 列
+  var frame2 = [];
+  frame2.push({ x: (caseX0 + caseX1) / 2, y: y0 + 3.02, z: caseZ + 0.2, w: caseX1 - caseX0, h: 0.12, d: 0.62, c: 0x1e150f, j: 0.03 });
+  frame2.push({ x: caseX0 + 0.06, y: y0 + 1.75, z: caseZ + 0.2, w: 0.12, h: 2.55, d: 0.62, c: 0x1e150f, j: 0.03 });
+  frame2.push({ x: caseX1 - 0.06, y: y0 + 1.75, z: caseZ + 0.2, w: 0.12, h: 2.55, d: 0.62, c: 0x1e150f, j: 0.03 });
+  scene.add(new THREE.Mesh(batchBoxes(frame2), new THREE.MeshLambertMaterial({ vertexColors: true })));
+
+  var cigs = [];
+  var rowsY = [1.02, 1.34, 1.66, 1.98, 2.30];
+  var cols = 15;
+  var spanX = (caseX1 - caseX0) - 0.5;
+  for (var r2 = 0; r2 < rowsY.length; r2++){
+    var idx0 = (r2 * 7) % TOB.list.length;
+    for (var c2 = 0; c2 < cols; c2++){
+      var brand = TOB.list[(idx0 + ((c2 / 2.2) | 0)) % TOB.list.length];
+      cigs.push({
+        x: caseX0 + 0.30 + c2 * (spanX / (cols - 1)),
+        y: y0 + rowsY[r2],
+        z: caseZ + 0.22,
+        w: 0.175, h: 0.235, d: 0.05,
+        cell: brand.cell, c: 0xf2f2f2, j: 0.04
+      });
+    }
+  }
+  var cigMesh = new THREE.Mesh(batchLabeled(cigs, TOB_ATLAS),
+    new THREE.MeshLambertMaterial({ map: TEX.tobacco, vertexColors: true }));
+  scene.add(cigMesh);
+
+  var shelves2 = [];
+  for (var r3 = 0; r3 < 5; r3++){
+    shelves2.push({ x: (caseX0 + caseX1) / 2, y: y0 + rowsY[r3] - 0.012, z: caseZ + 0.02, w: caseX1 - caseX0 - 0.3, h: 0.02, d: 0.3, c: 0x3a2a1c, j: 0.03 });
+  }
+  scene.add(new THREE.Mesh(batchBoxes(shelves2), new THREE.MeshLambertMaterial({ vertexColors: true })));
+
+  // ---- 酒柜 ----
+  var bottles = [], boards = [];
+  function liquorRun(xWall, zFrom, zTo, faceDir){
+    var levels = [0.42, 0.98, 1.54];
+    for (var lv = 0; lv < 3; lv++){
+      boards.push({ x: xWall, y: y0 + levels[lv] - 0.03, z: (zFrom + zTo) / 2, w: 0.42, h: 0.05, d: Math.abs(zTo - zFrom), c: 0x4a3626, j: 0.03 });
+      var n = Math.max(3, Math.floor(Math.abs(zTo - zFrom) / 0.5));
+      for (var b = 0; b < n; b++){
+        var bz = Math.min(zFrom, zTo) + 0.28 + b * ((Math.abs(zTo - zFrom) - 0.5) / Math.max(1, n - 1));
+        var it = LIQ.list[(b + lv * 3) % LIQ.list.length];
+        bottles.push({
+          x: xWall + faceDir * 0.02, y: y0 + levels[lv] + 0.02, z: bz,
+          w: 0.2, h: 0.32, cell: it.cell, c: 0xffffff, j: 0.04
+        });
+      }
+    }
+  }
+  liquorRun(SH.X0 + 0.34, -7.4, -11.9, 1);
+  liquorRun(SH.X1 - 0.34, -9.0, -11.9, -1);
+  addCol(SH.X0, SH.X0 + 0.62, -11.95, -7.35, 'shopShelfL');
+  addCol(SH.X1 - 0.62, SH.X1, -11.95, -8.95, 'shopShelfR');
+  var boardMesh = new THREE.Mesh(batchBoxes(boards), new THREE.MeshLambertMaterial({ vertexColors: true }));
+  boardMesh.castShadow = true; scene.add(boardMesh);
+  var bottleMesh = new THREE.Mesh(batchBillboard(bottles, LIQ_ATLAS),
+    new THREE.MeshLambertMaterial({ map: TEX.liquor, transparent: true, alphaTest: 0.45, side: THREE.DoubleSide, vertexColors: true }));
+  scene.add(bottleMesh);
+
+  // 地上的啤酒箱
+  var crates = [];
+  for (var ci = 0; ci < 4; ci++){
+    crates.push({
+      x: SH.X1 - 0.55 - (ci % 2) * 0.02, y: y0 + 0.115 + Math.floor(ci / 2) * 0.23, z: -9.25 - (ci % 2) * 0.42,
+      w: 0.36, h: 0.22, d: 0.34, cell: LIQ.list[8 + ci].cell, c: 0xe8e2d4, j: 0.05
+    });
+  }
+  var crateMesh = new THREE.Mesh(batchLabeled(crates, LIQ_ATLAS),
+    new THREE.MeshLambertMaterial({ map: TEX.liquor, vertexColors: true }));
+  crateMesh.castShadow = true; scene.add(crateMesh);
+
+  // ---- 收银台 ----
+  var ctX0 = 11.65, ctX1 = SH.X1 - 0.2, ctZ0 = -6.95, ctZ1 = -8.75;
+  box(ctX1 - ctX0, 0.95, ctZ1 - ctZ0, (ctX0 + ctX1) / 2, y0 + 0.47, (ctZ0 + ctZ1) / 2, new THREE.MeshLambertMaterial({ color: 0x3a2a1c }));
+  box(ctX1 - ctX0 + 0.1, 0.06, ctZ1 - ctZ0 + 0.1, (ctX0 + ctX1) / 2, y0 + 0.97, (ctZ0 + ctZ1) / 2, new THREE.MeshLambertMaterial({ color: 0xc9b89a }));
+  addCol(ctX0, ctX1, ctZ1, ctZ0, 'shopCounter');
+  var reg = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.28, 0.34), new THREE.MeshLambertMaterial({ color: 0x26282e }));
+  reg.position.set(12.3, y0 + 1.14, -7.5); scene.add(reg);
+  var scr = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.18), new THREE.MeshBasicMaterial({ color: 0x9fe8ff }));
+  scr.position.set(12.3, y0 + 1.17, -7.32); scene.add(scr);
+  addGlow(12.3, y0 + 1.17, -7.3, 0.6, 0.45, 0x9fe8ff, 0.3);
+
+  // 柜台上的展示烟盒
+  var topCigs = [];
+  for (var tc = 0; tc < 6; tc++){
+    var br = TOB.list[tc % TOB.list.length];
+    topCigs.push({ x: 11.85 + (tc % 3) * 0.22, y: y0 + 1.0, z: -7.2 - ((tc / 3) | 0) * 0.3,
+      w: 0.12, h: 0.16, d: 0.05, cell: br.cell, c: 0xf2f2f2, j: 0.03 });
+  }
+  scene.add(new THREE.Mesh(batchLabeled(topCigs, TOB_ATLAS),
+    new THREE.MeshLambertMaterial({ map: TEX.tobacco, vertexColors: true })));
+
+  // 墙上告示
+  var pc = mkCanvas(512, 192), px2 = pc.getContext('2d');
+  px2.fillStyle = '#f2ead8'; px2.fillRect(0, 0, 512, 192);
+  px2.strokeStyle = '#b3261e'; px2.lineWidth = 8; px2.strokeRect(8, 8, 496, 176);
+  px2.fillStyle = '#b3261e'; px2.textAlign = 'center'; px2.textBaseline = 'middle';
+  px2.font = 'bold 64px "Noto Sans CJK JP",sans-serif';
+  px2.fillText('假 一 赔 十', 256, 78);
+  px2.font = 'bold 26px "Noto Sans CJK JP",sans-serif';
+  px2.fillStyle = '#5a3a2a';
+  px2.fillText('香烟 · 名酒 · 正品保证', 256, 140);
+  var pt = new THREE.CanvasTexture(pc); pt.encoding = THREE.sRGBEncoding;
+  var pm = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.56), new THREE.MeshBasicMaterial({ map: pt, color: 0xd8cfc0 }));
+  pm.position.set(SH.X0 + 0.14, y0 + 2.35, -9.4);
+  pm.rotation.y = Math.PI / 2;
+  scene.add(pm);
+
+  // 店员
+  SHOP.clerk = makePerson(0x4a2b25, 0x1d1a18, 1.0);
+  SHOP.clerk.position.set(12.55, y0, -8.2);
+  SHOP.clerk.rotation.y = -Math.PI / 2;
+  scene.add(SHOP.clerk);
+}
 // ===== p5 街道：路灯 / 电线杆 / 售货机 / 自行车 / 远景楼群 / 树 =====
 function buildStreet(){
   var boxes = [], lit = [];
@@ -1104,10 +1630,10 @@ function buildStreet(){
 
   // ---------- 电线杆 + 电线 ----------
   var upole = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 7.4, 7), new THREE.MeshLambertMaterial({ color: 0x24272c }));
-  upole.position.set(8.6, 3.7, 0.6); upole.castShadow = true; scene.add(upole);
+  upole.position.set(15.2, 3.7, 0.6); upole.castShadow = true; scene.add(upole);
   var cross = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.08), new THREE.MeshLambertMaterial({ color: 0x2b2e34 }));
-  cross.position.set(8.6, 6.6, 0.6); scene.add(cross);
-  addCol(8.3, 8.9, 0.3, 0.9, 'upole');
+  cross.position.set(15.2, 6.6, 0.6); scene.add(cross);
+  addCol(14.9, 15.5, 0.3, 0.9, 'upole');
   // 猫须电线（悬链线）
   var wireMat = new THREE.LineBasicMaterial({ color: 0x0e1116 });
   function wire(a, b, sag){
@@ -1123,34 +1649,34 @@ function buildStreet(){
     var g = new THREE.BufferGeometry().setFromPoints(pts);
     scene.add(new THREE.Line(g, wireMat));
   }
-  wire([8.6, 6.55, 0.5], [-7.4, 5.2, -1.3], 1.1);
-  wire([8.6, 6.45, 0.7], [-7.4, 5.05, -1.5], 1.35);
-  wire([8.6, 6.6, 0.6], [-15.5, 5.6, 2.2], 0.7);
+  wire([15.2, 6.55, 0.5], [-7.4, 5.2, -1.3], 1.6);
+  wire([15.2, 6.45, 0.7], [-7.4, 5.05, -1.5], 1.9);
+  wire([15.2, 6.6, 0.6], [-15.5, 5.6, 2.2], 1.1);
 
   // ---------- 自动售货机 ----------
   var vmBody = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.95, 0.78),
     new THREE.MeshLambertMaterial({ color: 0xb9352f }));
-  vmBody.position.set(6.15, 0.98, -5.35); vmBody.castShadow = true; scene.add(vmBody);
+  vmBody.position.set(5.58, 0.98, -5.35); vmBody.castShadow = true; scene.add(vmBody);
   var vmFace = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.35),
     new THREE.MeshBasicMaterial({ color: 0x6e7885 }));
-  vmFace.position.set(6.15, 1.25, -4.95); scene.add(vmFace);
+  vmFace.position.set(5.58, 1.25, -4.95); scene.add(vmFace);
   // 机器里的饮料排
   var drinks = [];
   for (var d = 0; d < 15; d++){
     drinks.push({
-      x: 5.78 + (d % 5) * 0.18, y: 0.85 + Math.floor(d / 5) * 0.34, z: -4.93,
+      x: 5.21 + (d % 5) * 0.18, y: 0.85 + Math.floor(d / 5) * 0.34, z: -4.93,
       w: 0.11, h: 0.2, d: 0.05, c: [0xd8342c, 0x1f6fd0, 0x2f9e5e, 0xe0b53a, 0xe8e4d8][d % 5], j: 0.1
     });
   }
   // 机头红带 + 取货口
   var vmTrim = [];
-  vmTrim.push({ x: 6.15, y: 1.90, z: -4.94, w: 1.0, h: 0.16, d: 0.04, c: 0xc0302a, j: 0.04 });
-  vmTrim.push({ x: 6.15, y: 0.42, z: -4.94, w: 0.72, h: 0.3, d: 0.04, c: 0x14161a, j: 0.04 });
+  vmTrim.push({ x: 5.58, y: 1.90, z: -4.94, w: 1.0, h: 0.16, d: 0.04, c: 0xc0302a, j: 0.04 });
+  vmTrim.push({ x: 5.58, y: 0.42, z: -4.94, w: 0.72, h: 0.3, d: 0.04, c: 0x14161a, j: 0.04 });
   scene.add(new THREE.Mesh(batchBoxes(vmTrim), new THREE.MeshLambertMaterial({ vertexColors: true })));
   var drinkMesh = new THREE.Mesh(batchBoxes(drinks), new THREE.MeshBasicMaterial({ vertexColors: true }));
   scene.add(drinkMesh);
-  addGlow(6.15, 1.3, -4.85, 2.6, 2.4, 0xffdca8, 0.32);
-  addCol(5.55, 6.75, -5.75, -4.95, 'vm');
+  addGlow(5.58, 1.3, -4.85, 2.6, 2.4, 0xffdca8, 0.32);
+  addCol(4.98, 6.18, -5.75, -4.95, 'vm');
 
   // ---------- 垃圾桶 ----------
   var bins = [];
@@ -1245,9 +1771,9 @@ function buildStreet(){
   }
   // 街道两侧的矮楼（近景剪影）
   boxes.push({ x: -16.5, y: 2.1, z: -12.0, w: 7.0, h: 4.2, d: 9.0, c: 0x0d1014, j: 0.06 });
-  boxes.push({ x: 15.0, y: 2.6, z: -12.5, w: 8.0, h: 5.2, d: 9.0, c: 0x0c0f13, j: 0.06 });
+  boxes.push({ x: 21.5, y: 2.2, z: -15.0, w: 6.0, h: 4.4, d: 8.0, c: 0x0c0f13, j: 0.06 });
   addCol(-20.1, -12.9, -16.5, -7.5, 'bldgL');
-  addCol(11.0, 19.0, -17, -8, 'bldgR');
+  addCol(18.2, 24.8, -19.5, -10.5, 'bldgR');
   var bldMesh = new THREE.Mesh(batchBoxes(boxes), new THREE.MeshLambertMaterial({ vertexColors: true }));
   bldMesh.castShadow = true; bldMesh.receiveShadow = true;
   scene.add(bldMesh);
@@ -1312,12 +1838,13 @@ function buildRain(){
       uL0: { value: new THREE.Vector3(0, 2.8, -5.2) },
       uL1: { value: new THREE.Vector3(-6.2, 4.8, -1.4) },
       uL2: { value: new THREE.Vector3(6.15, 1.3, -4.9) },
-      uStoreBox: { value: new THREE.Vector4(-4.7, 4.7, -13.1, -5.9) }
+      uStoreBox: { value: new THREE.Vector4(-4.7, 4.7, -13.1, -5.9) },
+      uShopBox: { value: new THREE.Vector4(6.5, 13.7, -12.7, -5.9) }
     },
     vertexShader: [
       'attribute float aSeed; attribute float aEnd;',
       'uniform float uTime, uH, uSpeed, uSlant;',
-      'uniform vec3 uL0, uL1, uL2; uniform vec4 uStoreBox;',
+      'uniform vec3 uL0, uL1, uL2; uniform vec4 uStoreBox; uniform vec4 uShopBox;',
       'varying float vA; varying float vG;',
       'void main(){',
       '  vec3 p = position;',
@@ -1336,6 +1863,7 @@ function buildRain(){
       '  float d = length(mv.xyz);',
       '  vA = smoothstep(42.0, 3.0, d) * (aEnd > 0.5 ? 0.35 : 1.0);',
       '  if (wp.x > uStoreBox.x && wp.x < uStoreBox.y && wp.z > uStoreBox.z && wp.z < uStoreBox.w && wp.y < 3.6) vA = 0.0;',
+      '  if (wp.x > uShopBox.x && wp.x < uShopBox.y && wp.z > uShopBox.z && wp.z < uShopBox.w && wp.y < 3.9) vA = 0.0;',
       '  gl_Position = projectionMatrix * mv;',
       '}'
     ].join('\n'),
@@ -1571,6 +2099,7 @@ function collide(p, r){
 
 function surfaceAt(x, z){
   if (z < LAY.ST_Z1 - 0.05 && z > LAY.ST_Z0 && Math.abs(x) < 4.45) return 'tile';
+  if (z < LAY.SHOP.Z1 - 0.05 && z > LAY.SHOP.Z0 && x > LAY.SHOP.X0 && x < LAY.SHOP.X1) return 'tile';
   if (STORE.awnRect && z > STORE.awnRect.z0 - 0.15 && z < STORE.awnRect.z1 + 0.15 &&
       x > STORE.awnRect.x0 && x < STORE.awnRect.x1) return 'dry';
   return 'wet';
@@ -2093,9 +2622,10 @@ function bindLook(){
 }
 
 // ---------- 门 ----------
-var doorState = { open: false };
+var doorState = { store: false, shop: false };
 function updateDoor(dt){
-  var d = Math.sqrt(Math.pow(PLAYER.pos.x, 2) + Math.pow(PLAYER.pos.z - LAY.ST_Z1, 2));
+  // 便利店门
+  var d = Math.sqrt(PLAYER.pos.x * PLAYER.pos.x + Math.pow(PLAYER.pos.z - LAY.ST_Z1, 2));
   var want = d < 2.6 ? 1 : 0;
   STORE.openAmt = lerp(STORE.openAmt, want, 1 - Math.exp(-dt * 6));
   if (STORE.openAmt < 0.002) STORE.openAmt = 0;
@@ -2104,9 +2634,25 @@ function updateDoor(dt){
     p.position.x = p.userData.dir * STORE.openAmt * 1.02;
   }
   var opening = STORE.openAmt > 0.5;
-  if (opening !== doorState.open){
-    doorState.open = opening;
+  if (opening !== doorState.store){
+    doorState.store = opening;
     if (window.AUD && AUD.bell && CLOCK.t > 1.0) AUD.bell(opening);
+  }
+
+  // 烟酒店门
+  var dx = PLAYER.pos.x - (LAY.SHOP.DX0 + LAY.SHOP.DX1) / 2;
+  var dz = PLAYER.pos.z - LAY.SHOP.Z1;
+  var want2 = (Math.sqrt(dx * dx + dz * dz) < 2.4) ? 1 : 0;
+  SHOP.openAmt = lerp(SHOP.openAmt, want2, 1 - Math.exp(-dt * 6));
+  if (SHOP.openAmt < 0.002) SHOP.openAmt = 0;
+  for (var j = 0; j < SHOP.doorPanes.length; j++){
+    var q = SHOP.doorPanes[j];
+    q.position.x = q.userData.dir * SHOP.openAmt * 0.66;
+  }
+  var opening2 = SHOP.openAmt > 0.5;
+  if (opening2 !== doorState.shop){
+    doorState.shop = opening2;
+    if (window.AUD && AUD.bell && CLOCK.t > 1.0) setTimeout(function(){ AUD.bell(opening2); }, 160);
   }
 }
 
@@ -2132,7 +2678,7 @@ function stepFrame(now){
     FX.rainMat.uniforms.uTime.value = CLOCK.t;
     FX.splash.position.set(PLAYER.pos.x, groundY(PLAYER.pos.x, PLAYER.pos.z), PLAYER.pos.z);
     FX.splashMat.uniforms.uTime.value = CLOCK.t;
-    FX.splash.visible = !(PLAYER.pos.z < -5.9 && Math.abs(PLAYER.pos.x) < 4.7);
+    FX.splash.visible = !((PLAYER.pos.z < -5.9 && Math.abs(PLAYER.pos.x) < 4.7) || (PLAYER.pos.z < -5.9 && PLAYER.pos.x > LAY.SHOP.X0 && PLAYER.pos.x < LAY.SHOP.X1));
   }
   if (FX.sheetMat){
     FX.sheetMat.uniforms.uTime.value = CLOCK.t;
@@ -2221,11 +2767,14 @@ function boot(){
   };
   initTextures();
   texSnackAtlas();
+  texTobacco();
+  texLiquor();
   buildSky();
   buildLights();
   buildGround();
   buildStore();
   buildInterior();
+  buildShop();
   buildStreet();
   buildRain();
   buildReflection();
@@ -2306,7 +2855,7 @@ function boot(){
   };
 
   window.__G = {
-    PLAYER: PLAYER, ACTOR: ACTOR, STORE: STORE, FX: FX, AUD: AUD, scene: scene,
+    PLAYER: PLAYER, ACTOR: ACTOR, STORE: STORE, SHOP: SHOP, FX: FX, AUD: AUD, scene: scene,
     camera: camera, renderer: renderer, LIGHTS: LIGHTS, COL: COL, INPUT: INPUT, CLOCK: CLOCK, ACT: ACT
   };
   window.__step = function(n, dt){
