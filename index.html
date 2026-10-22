@@ -33,6 +33,14 @@
       mix-blend-mode:screen;opacity:.9;transition:background .25s linear}
   .lg::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
       box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+  .lg.panel{background:linear-gradient(160deg,rgba(16,22,32,.80) 0%,rgba(12,18,28,.72) 45%,rgba(10,15,24,.78) 100%);
+      -webkit-backdrop-filter:blur(16px) saturate(140%) brightness(.94);
+      backdrop-filter:blur(16px) saturate(140%) brightness(.94);
+      box-shadow:0 0 0 1px rgba(255,255,255,.22),
+        inset 0 1.5px 1px rgba(255,255,255,.55),
+        inset 0 -10px 18px rgba(0,0,0,.30),
+        0 16px 40px rgba(0,0,0,.48)}
+  .lg.panel::before{opacity:.35}
   .lg:active{transform:scale(.952);
       box-shadow:0 0 0 1px rgba(255,255,255,.6),
         inset 0 2px 2px rgba(255,255,255,1),
@@ -91,6 +99,43 @@
               0 12px 30px rgba(0,0,0,.34),
               0 0 34px rgba(255,255,255,.10)}
   #loading{font-size:12.5px;color:rgba(190,210,235,.55);letter-spacing:.2em;margin-top:16px}
+  #pickTip{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:7;
+       display:none;align-items:center;gap:12px;padding:9px 10px 9px 20px;border-radius:999px;
+       font-size:13px;letter-spacing:.04em;max-width:78vw}
+  #pickTip.on{display:flex}
+  #pickName{color:#f2f8ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #pickGo{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+       background:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,255,255,.22));
+       box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -2px 4px rgba(120,150,190,.25),
+                  0 4px 10px rgba(0,0,0,.3);font-size:14px;color:#fff;font-weight:600}
+  #bagPanel{position:fixed;right:18px;top:70px;z-index:9;display:none;flex-direction:column;
+       width:min(300px,72vw);max-height:calc(100vh - 190px);border-radius:26px;padding:14px 12px 10px}
+  #bagPanel.on{display:flex}
+  .bagHead{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;
+       letter-spacing:.1em;color:#eaf3ff;padding:0 6px 10px;border-bottom:1px solid rgba(255,255,255,.16)}
+  .bagHead #bagSum{font-size:15px;font-weight:600;color:#fff}
+  #bagList{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 4px;flex:1;
+       display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .slot{position:relative;aspect-ratio:1/1.08;border-radius:14px;overflow:hidden;
+       background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.26),rgba(255,255,255,.08));
+       box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+  .slot .ico{position:absolute;inset:6px;background-repeat:no-repeat;background-size:100% 100%;
+       filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+  .slot .nm{position:absolute;left:0;right:0;bottom:0;font-size:9px;text-align:center;
+       color:#eaf3ff;background:linear-gradient(transparent,rgba(6,10,18,.72));padding:6px 2px 3px}
+  .bagHint{font-size:10.5px;color:rgba(226,238,252,.55);text-align:center;padding-top:6px;letter-spacing:.06em}
+  #detailCard{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.92);z-index:12;
+       display:none;align-items:center;gap:16px;padding:18px 20px;border-radius:26px;
+       width:min(420px,86vw);opacity:0;transition:opacity .18s,transform .18s}
+  #detailCard.on{display:flex;opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #dIcon{width:104px;height:124px;flex:0 0 auto;background-repeat:no-repeat;background-size:contain;
+       background-position:center;filter:drop-shadow(0 6px 12px rgba(0,0,0,.45))}
+  .dInfo{flex:1;min-width:0;color:#f2f8ff}
+  #dName{font-size:17px;font-weight:600;letter-spacing:.06em}
+  #dPrice{font-size:14px;color:#ffdca8;margin:6px 0 8px;letter-spacing:.04em}
+  #dDesc{font-size:11.5px;line-height:1.6;color:rgba(232,242,255,.72)}
+  #dBack{margin-top:10px;padding:8px 16px;border-radius:999px;font-size:12px;font-family:inherit;
+       color:#f2f8ff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
   #tip{position:fixed;left:50%;bottom:178px;transform:translateX(-50%);z-index:6;
        font-size:12.5px;letter-spacing:.06em;color:#eef5ff;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.5);
        padding:9px 18px;border-radius:999px;
@@ -122,8 +167,24 @@
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
 <div id="btns">
+  <button id="btnBag" class="lg">篮子</button>
   <button id="btnView" class="lg">视角</button>
   <button id="btnSound" class="lg">音效</button>
+</div>
+<div id="pickTip" class="lg"><span id="pickName">—</span><span id="pickGo">拿</span></div>
+<div id="bagPanel" class="lg panel">
+  <div class="bagHead"><span>购物篮</span><span id="bagSum">¥0</span></div>
+  <div id="bagList"></div>
+  <div class="bagHint">点一下看详情 · 再点收起</div>
+</div>
+<div id="detailCard" class="lg panel">
+  <div id="dIcon"></div>
+  <div class="dInfo">
+    <div id="dName">—</div>
+    <div id="dPrice">—</div>
+    <div id="dDesc">—</div>
+  </div>
+  <button id="dBack">放回</button>
 </div>
 <div id="start">
   <h1>雨夜便利店</h1>
@@ -1332,7 +1393,7 @@ function buildInterior(){
           var bx = cx - span / 2 + (span / (nItem - 1)) * b;
           prod.push({
             x: bx, y: sy + lh / 2 + 0.024, z: cz + (face ? 0.30 : -0.30),
-            w: rnd(0.20, 0.24), h: lh, d: 0.13, cell: lane.cell, c: 0xf4f4f4, j: 0.05
+            w: rnd(0.20, 0.24), h: lh, d: 0.13, cell: lane.cell, nm: lane.name, c: 0xf4f4f4, j: 0.05
           });
         }
       }
@@ -1421,6 +1482,9 @@ function buildInterior(){
     new THREE.MeshLambertMaterial({ map: TEX.snack, vertexColors: true }));
   prodMesh.castShadow = true;
   scene.add(prodMesh);
+  INTERIOR.prodMesh = prodMesh;
+  INTERIOR.rebuild = function(){ rebuildMesh(prodMesh, prod, TEX.snack); };
+  registerPickList(prod, TEX.snack, 'snack', INTERIOR.rebuild);
   var frameMesh = new THREE.Mesh(batchBoxes(frames), new THREE.MeshLambertMaterial({ vertexColors: true }));
   frameMesh.castShadow = true;
   scene.add(frameMesh);
@@ -1672,13 +1736,16 @@ function buildShop(){
         y: y0 + rowsY[r2] + 0.1175,
         z: caseZ + 0.22,
         w: 0.175, h: 0.235, d: 0.05,
-        cell: brand.cell, c: 0xf2f2f2, j: 0.04
+        cell: brand.cell, nm: brand.name, c: 0xf2f2f2, j: 0.04
       });
     }
   }
   var cigMesh = new THREE.Mesh(batchLabeled(cigs, TOB_ATLAS),
     new THREE.MeshLambertMaterial({ map: TEX.tobacco, vertexColors: true }));
   scene.add(cigMesh);
+  SHOP.cigMesh = cigMesh;
+  SHOP.rebuildCigs = function(){ rebuildMesh(cigMesh, cigs, TEX.tobacco); };
+  registerPickList(cigs, TEX.tobacco, 'cig', SHOP.rebuildCigs);
 
   var shelves2 = [];
   for (var r3 = 0; r3 < 5; r3++){
@@ -1717,6 +1784,13 @@ function buildShop(){
   var labelMesh = new THREE.Mesh(bgeo.labels,
     new THREE.MeshLambertMaterial({ map: TEX.liqLabel, vertexColors: true, side: THREE.DoubleSide }));
   scene.add(labelMesh);
+  SHOP.rebuildBottles = function(){
+    var g2 = batchBottles(bottles.filter(function(b){ return !b.taken; }), LIQ_ATLAS);
+    if (!g2) return;
+    glassMesh.geometry.dispose(); glassMesh.geometry = g2.glass;
+    labelMesh.geometry.dispose(); labelMesh.geometry = g2.labels;
+  };
+  registerPickList(bottles, TEX.liquor, 'liq', SHOP.rebuildBottles, function(b){ return b.y + b.h * 0.55; });
 
   // 地上的啤酒箱
   var crates = [];
@@ -1746,7 +1820,7 @@ function buildShop(){
   for (var tc = 0; tc < 6; tc++){
     var br = TOB.list[tc % TOB.list.length];
     topCigs.push({ x: 11.85 + (tc % 3) * 0.22, y: y0 + 1.08, z: -7.2 - ((tc / 3) | 0) * 0.3,
-      w: 0.12, h: 0.16, d: 0.05, cell: br.cell, c: 0xf2f2f2, j: 0.03 });
+      w: 0.12, h: 0.16, d: 0.05, cell: br.cell, nm: br.name, c: 0xf2f2f2, j: 0.03 });
   }
   scene.add(new THREE.Mesh(batchLabeled(topCigs, TOB_ATLAS),
     new THREE.MeshLambertMaterial({ map: TEX.tobacco, vertexColors: true })));
@@ -2573,6 +2647,13 @@ AUD.step = function(surface, power, side){
   }
 };
 
+// 拿起商品：一声轻脆的「哒」
+AUD.pick = function(){
+  if (!AUD.ready || AUD.muted) return;
+  burst({ freq: 4200, q: 2.2, gain: 0.28, dur: 0.05, atk: 0.001, type: 'highpass' });
+  burst({ freq: 1800, q: 5.0, gain: 0.16, dur: 0.09, atk: 0.002 });
+};
+
 // 衣物摩擦（切视角时的一点动静）
 AUD.cloth = function(){
   if (!AUD.ready || AUD.muted) return;
@@ -2619,6 +2700,198 @@ AUD.toggleMute = function(){
   if (AUD.master) AUD.master.gain.setTargetAtTime(AUD.muted ? 0 : 0.9, AUD.ctx.currentTime, 0.08);
   return AUD.muted;
 };
+// ===== p10 拿取系统：靠近 → 提示 → 拿走 → 购物篮 =====
+var PICK = { list: [], target: null, bag: [], maxDist: 2.9, maxAngle: 0.30, urls: {} };
+var _pickDir = null;
+
+var PRICE = {
+  '薯片': 5.5, '可乐': 3.0, '雪碧': 3.0, '矿泉水': 2.0, '泡面': 4.5, '饼干': 6.5, '牛奶': 3.5,
+  '辣条': 2.5, '苏打饼': 5.0, '巧克力': 9.9, '酸奶': 4.0, '饭团': 6.0, '三明治': 8.0,
+  '冰红茶': 3.5, '咖啡': 8.0, '口香糖': 6.0, '虾条': 3.5, '纸巾': 5.0,
+  '中华': 65, '红塔山': 8, '玉溪': 23, '云烟': 22, '利群': 20, '泰山': 10, '黄鹤楼': 20,
+  '芙蓉王': 25, '南京': 21, '双喜': 9, '七匹狼': 11, '黄金叶': 100, '白沙': 5, '苏烟': 45,
+  '钻石': 20, '娇子': 15,
+  '茅台': 1499, '五粮液': 899, '泸州': 89, '汾酒': 59, '洋河': 129, '剑南春': 399,
+  '牛栏山': 15, '江小白': 25, '青岛': 5, '崂山': 4, '雪花': 5, '燕京': 4
+};
+var UNIT_WORD = { snack: '包', cig: '包', liq: '瓶' };
+
+function atlasURL(tex){
+  for (var k in TEX){ if (TEX[k] === tex) return TEX[atlasKey(tex)]; }
+  return '';
+}
+function atlasKey(tex){
+  if (tex === TEX.snack) return 'snack';
+  if (tex === TEX.tobacco) return 'tobacco';
+  if (tex === TEX.liquor) return 'liquor';
+  return 'snack';
+}
+function texURL(tex){
+  var key = atlasKey(tex);
+  if (!PICK.urls[key]){
+    try { PICK.urls[key] = tex.image.toDataURL('image/png'); } catch(e){ PICK.urls[key] = ''; }
+  }
+  return PICK.urls[key];
+}
+
+// 把一批商品数组登记成可拿取
+function registerPickList(arr, tex, kind, rebuild, yOf){
+  var cols = (tex === TEX.snack) ? 6 : (tex === TEX.tobacco ? 6 : 12);
+  var rows = (tex === TEX.snack) ? 4 : (tex === TEX.tobacco ? 4 : 2);
+  for (var i = 0; i < arr.length; i++){
+    var it = arr[i];
+    if (!it || !it.cell) continue;
+    PICK.list.push({
+      src: it, kind: kind, tex: tex, cols: cols, rows: rows,
+      name: it.nm || '商品',
+      x: it.x, y: (yOf ? yOf(it) : it.y), z: it.z,
+      rebuild: rebuild
+    });
+  }
+}
+
+// 货架重绘（拿走一个就重建一次几何，几毫秒）
+function rebuildMesh(mesh, items, tex){
+  var alive = [];
+  for (var i = 0; i < items.length; i++) if (!items[i].taken) alive.push(items[i]);
+  var geo = mesh.userData.mode === 'bottle'
+    ? batchBottles(alive, LIQ_ATLAS).glass
+    : batchLabeled(alive, tex === TEX.tobacco ? TOB_ATLAS : (tex === TEX.liquor ? LIQ_ATLAS : ATLAS));
+  if (!geo) return;
+  mesh.geometry.dispose();
+  mesh.geometry = geo;
+}
+
+function pickInit(){
+  PICK.tipEl = document.getElementById('pickTip');
+  PICK.nameEl = document.getElementById('pickName');
+  PICK.bagEl = document.getElementById('bagPanel');
+  PICK.listEl = document.getElementById('bagList');
+  PICK.sumEl = document.getElementById('bagSum');
+  PICK.detail = document.getElementById('detailCard');
+  PICK.btnBag = document.getElementById('btnBag');
+
+  PICK.btnBag.onclick = function(e){
+    e.stopPropagation();
+    PICK.bagEl.classList.toggle('on');
+    renderBag();
+  };
+  document.getElementById('dBack').onclick = function(e){
+    e.stopPropagation();
+    // 放回货架
+    var b = PICK.detailItem;
+    if (b){
+      var i = PICK.bag.indexOf(b);
+      if (i >= 0) PICK.bag.splice(i, 1);
+      if (b.src) b.src.taken = false;
+      if (b.rebuild) b.rebuild();
+      renderBag();
+    }
+    PICK.detail.classList.remove('on');
+  };
+  document.getElementById('pickGo').onclick = function(e){
+    e.stopPropagation();
+    takeTarget();
+  };
+}
+
+function updatePick(dt){
+  if (!PICK.tipEl || !STARTED) return;
+  var dir = _pickDir || (_pickDir = new THREE.Vector3());
+  camera.getWorldDirection(dir);
+  var cp = camera.position;
+  var best = null, bestScore = 1e9;
+  for (var i = 0; i < PICK.list.length; i++){
+    var it = PICK.list[i];
+    if (it.src.taken) continue;
+    var dx = it.x - cp.x, dy = it.y - cp.y, dz = it.z - cp.z;
+    var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (d > PICK.maxDist) continue;
+    var dot = (dx * dir.x + dy * dir.y + dz * dir.z) / (d || 1);
+    var ang = Math.acos(Math.max(-1, Math.min(1, dot)));
+    if (ang > PICK.maxAngle) continue;
+    var score = ang * 2.2 + d * 0.22;
+    if (score < bestScore){ bestScore = score; best = it; }
+  }
+  PICK.target = best;
+  if (best){
+    PICK.tipEl.classList.add('on');
+    PICK.nameEl.textContent = '拿一' + (UNIT_WORD[best.kind] || '件') + ' ' + best.name;
+  } else {
+    PICK.tipEl.classList.remove('on');
+  }
+}
+
+function takeTarget(){
+  var it = PICK.target;
+  if (!it || it.src.taken) return;
+  it.src.taken = true;
+  PICK.bag.push({ name: it.name, cell: it.src.cell, tex: it.tex, cols: it.cols, rows: it.rows,
+                  price: PRICE[it.name] || 5, kind: it.kind, src: it.src, rebuild: it.rebuild });
+  PICK.target = null;
+  PICK.tipEl.classList.remove('on');
+  if (it.rebuild) it.rebuild();
+  renderBag();
+  if (window.AUD && AUD.pick) AUD.pick();
+  var t = document.getElementById('tip');
+  if (t){
+    t.textContent = '已放入购物篮：' + it.name;
+    t.classList.add('on');
+    clearTimeout(PICK._tipT);
+    PICK._tipT = setTimeout(function(){ t.classList.remove('on'); }, 1600);
+  }
+}
+
+function itemIcon(name, cell, tex, cols, rows){
+  var url = texURL(tex);
+  var c = cell[0], r = cell[1];
+  var px = cols > 1 ? (c / (cols - 1)) * 100 : 0;
+  var py = rows > 1 ? (r / (rows - 1)) * 100 : 0;
+  return 'background-image:url(' + url + ');background-size:' + (cols * 100) + '% ' + (rows * 100) +
+         '%;background-position:' + px + '% ' + py + '%;background-repeat:no-repeat;' +
+         'aspect-ratio:' + (tex === TEX.snack ? '1 / 1' : (tex === TEX.tobacco ? '0.75 / 1' : '0.6 / 1'));
+}
+
+function renderBag(){
+  if (!PICK.listEl) return;
+  var sum = 0, html = '';
+  for (var i = 0; i < PICK.bag.length; i++){
+    var b = PICK.bag[i];
+    sum += b.price;
+    html += '<div class="slot" data-i="' + i + '">' +
+            '<div class="ico" style="' + itemIcon(b.name, b.cell, b.tex, b.cols, b.rows) + '"></div>' +
+            '<div class="nm">' + b.name + '</div></div>';
+  }
+  PICK.listEl.innerHTML = html || '<div class="bagHint" style="grid-column:1/-1">篮子还是空的 · 走近货架点「拿」</div>';
+  PICK.sumEl.textContent = '¥' + (sum % 1 === 0 ? sum : sum.toFixed(1));
+  PICK.btnBag.textContent = '篮子 ' + PICK.bag.length;
+  var slots = PICK.listEl.querySelectorAll('.slot');
+  for (var j = 0; j < slots.length; j++){
+    slots[j].onclick = function(e){
+      e.stopPropagation();
+      var b = PICK.bag[+this.getAttribute('data-i')];
+      showDetail(b);
+    };
+  }
+}
+
+var DESC = {
+  snack: '24 小时便利店的常备零食，货架上还有不少。',
+  cig: '柜台后方陈列的正品卷烟，本店承诺假一赔十。',
+  liq: '货架上的名酒，扫码结账可开小票。'
+};
+
+function showDetail(b){
+  if (!b) return;
+  PICK.detailItem = b;
+  document.getElementById('dIcon').style.cssText = itemIcon(b.name, b.cell, b.tex, b.cols, b.rows);
+  document.getElementById('dName').textContent = b.name;
+  document.getElementById('dPrice').textContent = '¥' + (b.price % 1 === 0 ? b.price : b.price.toFixed(1)) +
+    ' · ' + (UNIT_WORD[b.kind] || '件');
+  document.getElementById('dDesc').textContent = DESC[b.kind] || '';
+  PICK.bagEl.classList.remove('on');
+  PICK.detail.classList.add('on');
+}
 // ===== p9 输入 / 主循环 / UI =====
 var INPUT = { jx: 0, jy: 0, run: false };
 
@@ -2752,20 +3025,27 @@ function bindStick(){
 // ---------- 视角拖动 ----------
 function bindLook(){
   var dragging = false, pid = -1, lx = 0, ly = 0;
+  var tapT = 0, tapX = 0, tapY = 0, tapMoved = 0;
   function down(e){
     if (e.target !== canvas) return;
     dragging = true; pid = e.pointerId; lx = e.clientX; ly = e.clientY;
+    tapT = performance.now(); tapX = e.clientX; tapY = e.clientY; tapMoved = 0;
   }
   function move(e){
     if (!dragging || e.pointerId !== pid) return;
     var dx = e.clientX - lx, dy = e.clientY - ly;
     lx = e.clientX; ly = e.clientY;
+    tapMoved += Math.abs(dx) + Math.abs(dy);
     if (ROT.on){ var tx2 = dy, ty2 = -dx; dx = tx2; dy = ty2; }
     PLAYER.yaw -= dx * 0.0042;
     PLAYER.pitch = clamp(PLAYER.pitch - dy * 0.0035, -1.25, 1.25);
     e.preventDefault();
   }
-  function up(e){ if (e.pointerId === pid) dragging = false; }
+  function up(e){
+    if (e.pointerId !== pid) return;
+    dragging = false;
+    if (tapMoved < 14 && performance.now() - tapT < 420) takeTarget();   // 轻点即拿
+  }
   canvas.addEventListener('pointerdown', down);
   window.addEventListener('pointermove', move, { passive: false });
   window.addEventListener('pointerup', up);
@@ -2850,6 +3130,7 @@ function stepFrame(now){
 
   updatePlayer(dt);
   updateDoor(dt);
+  updatePick(dt);
 
   // 雨与地面涟漪
   if (FX.rain){
@@ -2964,6 +3245,7 @@ function boot(){
   camera.layers.enable(3);
   bindStick();
   bindLook();
+  pickInit();
 
   // 液态玻璃：手机一倾斜，玻璃上的高光就跟着走
   try {
