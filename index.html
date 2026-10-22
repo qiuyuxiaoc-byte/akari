@@ -108,14 +108,22 @@
        background:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,255,255,.22));
        box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -2px 4px rgba(120,150,190,.25),
                   0 4px 10px rgba(0,0,0,.3);font-size:14px;color:#fff;font-weight:600}
-  #bagPanel{position:fixed;right:18px;top:66px;z-index:9;display:none;flex-direction:column;
+  #bagPanel{position:fixed;right:18px;top:78px;z-index:9;display:none;flex-direction:column;
        width:min(300px,70vw);max-height:max(170px,calc(100vh - 250px));border-radius:24px;padding:12px 12px 8px}
   #bagPanel.on{display:flex}
   .bagHead{display:flex;align-items:center;gap:8px;font-size:13px;
-       letter-spacing:.1em;color:#eaf3ff;padding:0 2px 9px;border-bottom:1px solid rgba(255,255,255,.16)}
+       letter-spacing:.1em;color:#eaf3ff;padding:0 30px 9px 2px;border-bottom:1px solid rgba(255,255,255,.16)}
   .bagHead .title{flex:1}
-  #bagClose{width:26px;height:26px;flex:0 0 auto;border-radius:50%;padding:0;font-size:15px;
-       line-height:1;display:flex;align-items:center;justify-content:center;color:#eaf3ff;font-family:inherit}
+  .iconBtn{display:flex;align-items:center;justify-content:center;position:relative;
+       color:#f2f8ff;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+  .iconBtn svg{width:27px;height:27px;display:block}
+  #bagCount{position:absolute;top:-2px;right:-2px;min-width:17px;height:17px;padding:0 4px;
+       border-radius:999px;font-size:10.5px;line-height:17px;text-align:center;font-weight:600;
+       color:#12202e;background:linear-gradient(180deg,#ffffff,#dbe8f6);
+       box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  #bagClose{position:absolute;top:-11px;right:-11px;width:38px;height:38px;border-radius:50%;
+       padding:0;z-index:10}
+  #bagClose svg{width:23px;height:23px}
   .bagHead #bagSum{font-size:15px;font-weight:600;color:#fff}
   #bagList{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 4px;flex:1;min-height:0;
        display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:86px;gap:8px;align-content:start}
@@ -136,7 +144,8 @@
   .dInfo{flex:1;min-width:0;color:#f2f8ff}
   #dName{font-size:17px;font-weight:600;letter-spacing:.06em}
   #dPrice{font-size:14px;color:#ffdca8;margin:6px 0 8px;letter-spacing:.04em}
-  #dDesc{font-size:11.5px;line-height:1.6;color:rgba(232,242,255,.72)}
+  #dTag{font-size:11px;letter-spacing:.08em;color:rgba(190,214,240,.72);margin-bottom:8px}
+  #dDesc{font-size:11.5px;line-height:1.65;color:rgba(232,242,255,.8)}
   #dBack{margin-top:10px;padding:8px 16px;border-radius:999px;font-size:12px;font-family:inherit;
        color:#f2f8ff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
   #tip{position:fixed;left:50%;bottom:178px;transform:translateX(-50%);z-index:6;
@@ -170,13 +179,25 @@
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
 <div id="btns">
-  <button id="btnBag" class="lg">篮子</button>
+  <button id="btnBag" class="lg iconBtn" aria-label="购物篮">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 4.2h2.1l2.3 10.1a2 2 0 0 0 2 1.55h7.1a2 2 0 0 0 2-1.6L20 7.2H6.1"/>
+      <circle cx="9.6" cy="19.6" r="1.35"/><circle cx="17.4" cy="19.6" r="1.35"/>
+    </svg>
+    <span id="bagCount">0</span>
+  </button>
   <button id="btnView" class="lg">视角</button>
   <button id="btnSound" class="lg">音效</button>
 </div>
 <div id="pickTip" class="lg"><span id="pickName">—</span><span id="pickGo">拿</span></div>
 <div id="bagPanel" class="lg panel">
-  <div class="bagHead"><span class="title">购物篮</span><span id="bagSum">¥0</span><button id="bagClose" class="lg" aria-label="关闭">×</button></div>
+  <button id="bagClose" class="lg iconBtn" aria-label="关闭购物篮">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.6 9h16.8l-1.8 8.4a2 2 0 0 1-2 1.6H7.4a2 2 0 0 1-2-1.6L3.6 9z"/>
+      <path d="M8.6 9 11 4.3M15.4 9 13 4.3M9.6 12.6v3.2M14.4 12.6v3.2"/>
+    </svg>
+  </button>
+  <div class="bagHead"><span class="title">购物篮</span><span id="bagSum">¥0</span></div>
   <div id="bagList"></div>
   <div class="bagHint">点一下看详情 · 再点收起</div>
 </div>
@@ -185,6 +206,7 @@
   <div class="dInfo">
     <div id="dName">—</div>
     <div id="dPrice">—</div>
+    <div id="dTag">—</div>
     <div id="dDesc">—</div>
   </div>
   <button id="dBack">放回</button>
@@ -602,10 +624,10 @@ function texTobacco(){
     { name: '中华', rom: 'CHUNGHWA', bg: '#c62828', fg: '#f7e6a8', accent: '#8e1c1c', emblem: 'star', acc: '#8e1c1c', acc2: '#f7e6a8', border: 'rgba(247,230,168,.75)' },
     { name: '红塔山', rom: 'HONGTA', bg: '#b71c1c', fg: '#ffffff', accent: '#7d1010', emblem: 'pagoda', acc2: '#f2e8cf', border: 'rgba(255,255,255,.45)' },
     { name: '玉溪', rom: 'YUXI', bg: '#c0392b', fg: '#f3d98b', accent: '#8a1f16', emblem: 'wave', acc: '#f3d98b', border: 'rgba(243,217,139,.7)' },
-    { name: '云烟', rom: 'YUNYAN', bg: '#5f2a86', fg: '#f2d98c', accent: '#3d1a5c', emblem: 'moon', acc: '#f2d98c', border: 'rgba(242,217,140,.7)' },
-    { name: '云烟', rom: 'YUNYAN SOFT', bg: '#f2efe6', fg: '#b03028', accent: '#d8d2c4', emblem: 'star', acc: '#b03028', acc2: '#f2efe6', border: 'rgba(176,48,40,.55)' },
-    { name: '利群', rom: 'LIQUN', bg: '#d9d4c6', fg: '#9e231e', accent: '#b9b2a1', emblem: 'moon', acc: '#9e231e', border: 'rgba(158,35,30,.5)' },
-    { name: '利群', rom: 'LIQUN SUNSHINE', bg: '#191a1e', fg: '#d9b96a', accent: '#000', emblem: 'star', acc: '#d9b96a', acc2: '#191a1e', border: 'rgba(217,185,106,.8)' },
+    { name: '云烟', key: '云烟紫', rom: 'YUNYAN', bg: '#5f2a86', fg: '#f2d98c', accent: '#3d1a5c', emblem: 'moon', acc: '#f2d98c', border: 'rgba(242,217,140,.7)' },
+    { name: '云烟', key: '云烟软', rom: 'YUNYAN SOFT', bg: '#f2efe6', fg: '#b03028', accent: '#d8d2c4', emblem: 'star', acc: '#b03028', acc2: '#f2efe6', border: 'rgba(176,48,40,.55)' },
+    { name: '利群', key: '利群', rom: 'LIQUN', bg: '#d9d4c6', fg: '#9e231e', accent: '#b9b2a1', emblem: 'moon', acc: '#9e231e', border: 'rgba(158,35,30,.5)' },
+    { name: '利群', key: '利群阳光', rom: 'LIQUN SUNSHINE', bg: '#191a1e', fg: '#d9b96a', accent: '#000', emblem: 'star', acc: '#d9b96a', acc2: '#191a1e', border: 'rgba(217,185,106,.8)' },
     { name: '泰山', rom: 'TAISHAN', bg: '#1b6d88', fg: '#ffffff', accent: '#0d4a5e', emblem: 'wave', acc: '#bfe8f2', border: 'rgba(191,232,242,.6)' },
     { name: '黄鹤楼', rom: 'HUANGHELOU', bg: '#1b4f9c', fg: '#f2d98c', accent: '#123670', emblem: 'pagoda', acc2: '#f2d98c', border: 'rgba(242,217,140,.7)' },
     { name: '芙蓉王', rom: 'FURONGWANG', bg: '#16305c', fg: '#e8c86a', accent: '#0d1e3c', emblem: 'star', acc: '#e8c86a', acc2: '#16305c', border: 'rgba(232,200,106,.75)' },
@@ -623,7 +645,7 @@ function texTobacco(){
   for (var i = 0; i < defs.length; i++){
     var col = i % COLS, row = (i / COLS) | 0;
     drawCig(x, col * W, row * H, W, H, defs[i]);
-    TOB.list.push({ name: defs[i].name, cell: [col, row], kind: 'cig' });
+    TOB.list.push({ name: defs[i].name, key: defs[i].key || defs[i].name, cell: [col, row], kind: 'cig' });
   }
   // 空格子（用于盒子其它面）
   x.fillStyle = '#9aa0a8';
@@ -1739,7 +1761,7 @@ function buildShop(){
         y: y0 + rowsY[r2] + 0.1175,
         z: caseZ + 0.22,
         w: 0.175, h: 0.235, d: 0.05,
-        cell: brand.cell, nm: brand.name, c: 0xf2f2f2, j: 0.04
+        cell: brand.cell, nm: brand.name, dk: brand.key, c: 0xf2f2f2, j: 0.04
       });
     }
   }
@@ -1823,7 +1845,7 @@ function buildShop(){
   for (var tc = 0; tc < 6; tc++){
     var br = TOB.list[tc % TOB.list.length];
     topCigs.push({ x: 11.85 + (tc % 3) * 0.22, y: y0 + 1.08, z: -7.2 - ((tc / 3) | 0) * 0.3,
-      w: 0.12, h: 0.16, d: 0.05, cell: br.cell, nm: br.name, c: 0xf2f2f2, j: 0.03 });
+      w: 0.12, h: 0.16, d: 0.05, cell: br.cell, nm: br.name, dk: br.key, c: 0xf2f2f2, j: 0.03 });
   }
   scene.add(new THREE.Mesh(batchLabeled(topCigs, TOB_ATLAS),
     new THREE.MeshLambertMaterial({ map: TEX.tobacco, vertexColors: true })));
@@ -2703,6 +2725,62 @@ AUD.toggleMute = function(){
   if (AUD.master) AUD.master.gain.setTargetAtTime(AUD.muted ? 0 : 0.9, AUD.ctx.currentTime, 0.08);
   return AUD.muted;
 };
+// ===== p10b 每件商品的专属详情（按品牌/口味写的） =====
+var DESC_ITEM = {
+  // ---- 便利店零食 ----
+  '薯片': { t: '乐事 · 原味 70g', d: '薄得透光的一片，咸度刚好。包装里一半是气，但没人计较——加班到十一点，这一包通常最先被拆开。' },
+  '可乐': { t: '碳酸饮料 · 330ml 罐装', d: '拉环一响，气泡直往上撞。冷柜最下层永远给它留着位置，半夜被拿走的最多。' },
+  '雪碧': { t: '柠檬味汽水 · 冰镇更佳', d: '绿瓶白字，第一口带着柠檬皮的涩。夏天收银台边总是横着摆两排，顺手就拿。' },
+  '矿泉水': { t: '天然水 · 550ml', d: '透明瓶、红盖子，标签上印着水源地。说不上好喝，但没人会拒绝它。' },
+  '泡面': { t: '红烧牛肉味 · 桶装', d: '热水五分钟，香精味先冲出来。夜班、赶车、通宵，这一桶是深夜的保底方案。' },
+  '饼干': { t: '夹心饼干 · 黑可可', d: '两块黑饼夹一层白霜，掰开时掉渣。老规矩是配一杯牛奶。' },
+  '牛奶': { t: '甜牛奶 · 125ml', d: '红色小盒，甜得不讲道理。包装上那张圆脸笑了三十年，从没换过。' },
+  '辣条': { t: '卫龙 · 麻辣味', d: '油亮的红，辣里带甜。撕开时手指会沾上辣油——这就是为什么很多人顺手又拿一包纸巾。' },
+  '苏打饼': { t: '太平苏打 · 微咸', d: '薄、脆、不甜，咸味只在最后一下才出来。配茶比配咖啡更合适。' },
+  '巧克力': { t: '丝滑牛奶巧克力', d: '锡纸一层层拆开，入口先化。冷柜里拿出来是脆的，在兜里放一会儿就软了。' },
+  '酸奶': { t: '原味发酵乳 · 需冷藏', d: '杯装带一把小勺，酸得克制。标签上印着一串活菌数，看着就觉得健康。' },
+  '饭团': { t: '海苔三角饭团', d: '米饭压得紧，中间一块馅，外面一圈海苔。拆开包装时海苔会先软下去。' },
+  '三明治': { t: '火腿蛋三明治', d: '两片吐司夹火腿和蛋，冷藏柜的常客。微波二十秒，比刚上架时好吃。' },
+  '冰红茶': { t: '柠檬红茶 · 500ml', d: '琥珀色的塑料瓶，酸甜里带一点茶的涩。夏天结账台上的固定搭配。' },
+  '咖啡': { t: '罐装黑咖啡', d: '铝罐冰过之后指尖发凉，不甜，醒神。夜班的第一口，通常站着就喝完半罐。' },
+  '口香糖': { t: '益达 · 薄荷味', d: '绿色小瓶，摇一摇会响。饭后来两粒，是很多人的收尾动作。' },
+  '虾条': { t: '膨化虾条 · 咸鲜', d: '轻得一捏就碎，手上会留一层橙色的粉。吃完要在裤子上拍两下。' },
+  '纸巾': { t: '三层抽纸', d: '柔软、不经用。买它的人往往是因为刚才那包辣条。' },
+
+  // ---- 香烟 ----
+  '中华': { t: '上海 · 烤烟型 · 硬盒', d: '沪产烤烟的标杆，梅子香打底，烟丝油润。喜宴和送礼都认这一盒，硬盒比软盒挺括。' },
+  '红塔山': { t: '云南玉溪 · 烤烟型', d: '清香里带一点干果甜，老牌子，便宜耐抽。工地、车间、货车驾驶室里见得最多。' },
+  '玉溪': { t: '云南玉溪 · 烤烟型', d: '红金配色，烟香偏醇厚，回味干净。比红塔山贵一档，是很多人固定的口粮。' },
+  '云烟紫': { t: '云南昆明 · 紫云 · 烤烟型', d: '紫底金字，入口绵、烟气细。西南地区的销量常年前排，一包能抽得比较久。' },
+  '云烟软': { t: '云南昆明 · 软包 · 烤烟型', d: '白底红字软包，烟丝细，燃得慢。软包揣兜里会被压扁，是老烟民不在乎的那种细节。' },
+  '利群': { t: '浙江杭州 · 烤烟型', d: '米灰底、红字，烟气偏淡，焦味轻。江浙一带最常见的口粮之一。' },
+  '利群阳光': { t: '浙江杭州 · 阳光 · 黑硬盒', d: '黑底金标，滤嘴带香，烟气更圆。价格翻了一倍——买它多半是今天有事。' },
+  '泰山': { t: '山东 · 颜悦 · 烤烟型', d: '青绿配色，带茶香调，入口偏甜。山东本地的招牌，烟盒比烟更有辨识度。' },
+  '黄鹤楼': { t: '湖北武汉 · 深蓝 · 烤烟型', d: '深蓝配金塔，烟气清雅。包装上的楼比烟本身更有名。' },
+  '芙蓉王': { t: '湖南常德 · 烤烟型', d: '藏蓝底金边，香味浓、劲道足。湖南湖北的硬通货，递出去不掉价。' },
+  '南京': { t: '江苏 · 烤烟型', d: '红底金字，带一点桂花香，烟气顺。南京城的名片，本地人从兜里掏出来很有仪式感。' },
+  '双喜': { t: '广东 · 烤烟型', d: '红底双喜字，甜香明显。婚宴和年节里出现频率最高的一盒。' },
+  '七匹狼': { t: '福建 · 灰盒 · 烤烟型', d: '灰底银线，烟味偏淡，包装低调。闽南一带的小卖部常见货。' },
+  '黄金叶': { t: '河南 · 天叶 · 高端', d: '金黄底，烟丝厚实，香气张扬。贵，买一包得先想一想。' },
+  '白沙': { t: '湖南长沙 · 烤烟型', d: '白底蓝字，价格最低的一档，烟气偏粗。胜在便宜，几块钱就能买一包。' },
+  '苏烟': { t: '江苏 · 高端 · 烤烟型', d: '暗红配金，入口绵软，回甘明显。送礼的常客，自己抽会有点心疼。' },
+  '钻石': { t: '河北 · 墨绿 · 烤烟型', d: '墨绿底，烟味清，价格中等。北方小城的常见货。' },
+  '娇子': { t: '四川成都 · 烤烟型', d: '黑底粉月，果香调味，烟气偏甜。适合偶尔换换口味，不适合当口粮。' },
+
+  // ---- 酒 ----
+  '茅台': { t: '贵州仁怀 · 酱香型 53°', d: '坤沙工艺，酒体微黄，空杯留香。开瓶那一瞬的酱味，就是它比同柜所有酒都贵的原因。' },
+  '五粮液': { t: '四川宜宾 · 浓香型 52°', d: '五种粮食酿，香气冲、回味长。玻璃瓶上那道水线，懂的人会先看一眼。' },
+  '泸州': { t: '四川泸州 · 浓香型 52°', d: '浓香型的老祖宗，窖香重，入口烈。价格亲民，是很多人桌上的日常白。' },
+  '汾酒': { t: '山西杏花村 · 清香型 53°', d: '清、净、爽，干净得像凉白开。北方人过年桌上常见的那一瓶。' },
+  '洋河': { t: '江苏宿迁 · 绵柔浓香', d: '蓝色瓶身，入口绵，不冲喉。主打的就是柔和两个字。' },
+  '剑南春': { t: '四川绵竹 · 浓香型 52°', d: '窖香带粮香，劲道明显。婚宴上的常客，喝完第二天会记得它。' },
+  '牛栏山': { t: '北京顺义 · 二锅头 42°', d: '绿标二锅头，便宜、冲、上头快。加班之后的深夜，一小瓶就够。' },
+  '江小白': { t: '重庆 · 清香高粱 40°', d: '小瓶装，文案比酒有名。入口清冽，适合第一次喝白酒的人。' },
+  '青岛': { t: '山东青岛 · 啤酒 4.3%', d: '1903 年的老厂，麦芽香干净，冰镇后能一口气干掉半瓶。' },
+  '崂山': { t: '山东青岛 · 啤酒', d: '用崂山水酿，口感偏淡。青岛本地的日常酒，配海鲜比配肉更对。' },
+  '雪花': { t: '全国 · 淡爽型啤酒', d: '气足、泡沫细、味道淡。夜宵摊上出现次数最多的那一瓶。' },
+  '燕京': { t: '北京 · 啤酒', d: '北京老牌子，麦香比雪花重一点。配烤串正好，凉得越透越好。' }
+};
 // ===== p10 拿取系统：靠近 → 提示 → 拿走 → 购物篮 =====
 var PICK = { list: [], target: null, bag: [], maxDist: 2.9, maxAngle: 0.30, urls: {} };
 var _pickDir = null;
@@ -2714,6 +2792,7 @@ var PRICE = {
   '中华': 65, '红塔山': 8, '玉溪': 23, '云烟': 22, '利群': 20, '泰山': 10, '黄鹤楼': 20,
   '芙蓉王': 25, '南京': 21, '双喜': 9, '七匹狼': 11, '黄金叶': 100, '白沙': 5, '苏烟': 45,
   '钻石': 20, '娇子': 15,
+  '云烟紫': 22, '云烟软': 22, '利群阳光': 35,
   '茅台': 1499, '五粮液': 899, '泸州': 89, '汾酒': 59, '洋河': 129, '剑南春': 399,
   '牛栏山': 15, '江小白': 25, '青岛': 5, '崂山': 4, '雪花': 5, '燕京': 4
 };
@@ -2746,7 +2825,7 @@ function registerPickList(arr, tex, kind, rebuild, yOf){
     if (!it || !it.cell) continue;
     PICK.list.push({
       src: it, kind: kind, tex: tex, cols: cols, rows: rows,
-      name: it.nm || '商品',
+      name: it.nm || '商品', dk: it.dk || it.nm || '商品',
       x: it.x, y: (yOf ? yOf(it) : it.y), z: it.z,
       rebuild: rebuild
     });
@@ -2809,6 +2888,13 @@ function closeBag(){
 
 function updatePick(dt){
   if (!PICK.tipEl || !STARTED) return;
+  // 面板打开时不显示拿取提示
+  if ((PICK.bagEl && PICK.bagEl.classList.contains('on')) ||
+      (PICK.detail && PICK.detail.classList.contains('on'))){
+    PICK.tipEl.classList.remove('on');
+    PICK.target = null;
+    return;
+  }
   var dir = _pickDir || (_pickDir = new THREE.Vector3());
   camera.getWorldDirection(dir);
   var cp = camera.position;
@@ -2838,8 +2924,8 @@ function takeTarget(){
   var it = PICK.target;
   if (!it || it.src.taken) return;
   it.src.taken = true;
-  PICK.bag.push({ name: it.name, cell: it.src.cell, tex: it.tex, cols: it.cols, rows: it.rows,
-                  price: PRICE[it.name] || 5, kind: it.kind, src: it.src, rebuild: it.rebuild });
+  PICK.bag.push({ name: it.name, dk: it.dk, cell: it.src.cell, tex: it.tex, cols: it.cols, rows: it.rows,
+                  price: PRICE[it.dk] || PRICE[it.name] || 5, kind: it.kind, src: it.src, rebuild: it.rebuild });
   PICK.target = null;
   PICK.tipEl.classList.remove('on');
   if (it.rebuild) it.rebuild();
@@ -2875,7 +2961,8 @@ function renderBag(){
   }
   PICK.listEl.innerHTML = html || '<div class="bagHint" style="grid-column:1/-1">篮子还是空的 · 走近货架点「拿」</div>';
   PICK.sumEl.textContent = '¥' + (sum % 1 === 0 ? sum : sum.toFixed(1));
-  PICK.btnBag.textContent = '篮子 ' + PICK.bag.length;
+  var cnt = document.getElementById('bagCount');
+  if (cnt) cnt.textContent = PICK.bag.length;
   var slots = PICK.listEl.querySelectorAll('.slot');
   for (var j = 0; j < slots.length; j++){
     slots[j].onclick = function(e){
@@ -2899,7 +2986,9 @@ function showDetail(b){
   document.getElementById('dName').textContent = b.name;
   document.getElementById('dPrice').textContent = '¥' + (b.price % 1 === 0 ? b.price : b.price.toFixed(1)) +
     ' · ' + (UNIT_WORD[b.kind] || '件');
-  document.getElementById('dDesc').textContent = DESC[b.kind] || '';
+  var info = (typeof DESC_ITEM !== 'undefined' && DESC_ITEM[b.dk]) || null;
+  document.getElementById('dTag').textContent = info ? info.t : '';
+  document.getElementById('dDesc').textContent = info ? info.d : (DESC[b.kind] || '');
   PICK.bagEl.classList.remove('on');
   PICK.detail.classList.add('on');
 }
