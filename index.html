@@ -214,7 +214,7 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10221714</div>
+  <div id="ver">v10221721</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -3032,24 +3032,25 @@ function pickInit(){
   PICK.trashEl = document.getElementById('trash');
   PICK.ghostEl = document.getElementById('ghost');
 
-  PICK.btnBag.onclick = function(e){
+  PICK.btnBag.onclick = null;
+  PICK.btnBag.addEventListener('pointerdown', function(e){
     e.stopPropagation();
     PICK.bagEl.classList.toggle('on');
     renderBag();
-  };
-  document.getElementById('bagClose').onclick = function(e){
+  });
+  document.getElementById('bagClose').addEventListener('pointerdown', function(e){
     e.stopPropagation();
     PICK.bagEl.classList.remove('on');
-  };
-  document.getElementById('pickGo').onclick = function(e){
+  });
+  document.getElementById('pickGo').addEventListener('pointerdown', function(e){
     e.stopPropagation();
     takeTarget();
-  };
-  document.getElementById('dBack').onclick = function(e){
+  });
+  document.getElementById('dBack').addEventListener('pointerdown', function(e){
     e.stopPropagation();
     PICK.detail.classList.remove('on');
-  };
-  document.getElementById('dPut').onclick = function(e){
+  });
+  document.getElementById('dPut').addEventListener('pointerdown', function(e){
     e.stopPropagation();
     var b = PICK.detailItem;
     if (b){
@@ -3057,10 +3058,10 @@ function pickInit(){
       if (i >= 0) removeFromBag(i);
     }
     PICK.detail.classList.remove('on');
-  };
+  });
   var bp = document.getElementById('bagPrev'), bn = document.getElementById('bagNext');
-  if (bp) bp.onclick = function(e){ e.stopPropagation(); PICK.page--; renderBag(); };
-  if (bn) bn.onclick = function(e){ e.stopPropagation(); PICK.page++; renderBag(); };
+  if (bp) bp.addEventListener('pointerdown', function(e){ e.stopPropagation(); PICK.page--; renderBag(); });
+  if (bn) bn.addEventListener('pointerdown', function(e){ e.stopPropagation(); PICK.page++; renderBag(); });
 }
 
 // ---------------- 拿取 ----------------
@@ -3878,20 +3879,26 @@ function boot(){
       setTimeout(function(){ tip.classList.remove('on'); }, 9000);
     }
   };
-  document.getElementById('btnView').onclick = function(e){ e.stopPropagation(); toggleView(); };
+  var btnView = document.getElementById('btnView');
+  btnView.onclick = null;
+  btnView.addEventListener('pointerdown', function(e){
+    e.stopPropagation();
+    toggleView();
+  });
   var sbtn = document.getElementById('btnSound');
   try { if (localStorage.getItem('akari_mute') === '1') { AUD.toggleMute(); } } catch(err){}
   function syncSoundBtn(){
     sbtn.classList.toggle('off', !!AUD.muted);
   }
   syncSoundBtn();
-  sbtn.onclick = function(e){
+  sbtn.onclick = null;
+  sbtn.addEventListener('pointerdown', function(e){
     e.stopPropagation();
     AUD.toggleMute();
     try { localStorage.setItem('akari_mute', AUD.muted ? '1' : '0'); } catch(err){}
     syncSoundBtn();
     if (!AUD.muted) resumeAudio();
-  };
+  });
 
   window.__G = {
     PLAYER: PLAYER, ACTOR: ACTOR, STORE: STORE, SHOP: SHOP, PICK: PICK, HOLD: HOLD, FX: FX, AUD: AUD, scene: scene,
