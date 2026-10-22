@@ -135,6 +135,20 @@
   .slot .nm{position:absolute;left:0;right:0;bottom:0;font-size:9px;text-align:center;
        color:#eaf3ff;background:linear-gradient(transparent,rgba(6,10,18,.72));padding:6px 2px 3px}
   .bagHint{font-size:10.5px;color:rgba(226,238,252,.55);text-align:center;padding-top:6px;letter-spacing:.06em}
+  #trash{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) scale(.8);z-index:14;
+       width:76px;height:76px;border-radius:50%;display:none;flex-direction:column;
+       align-items:center;justify-content:center;gap:2px;color:#ffd9d2;opacity:0;
+       transition:opacity .18s,transform .18s}
+  #trash.on{display:flex;opacity:1;transform:translateX(-50%) scale(1)}
+  #trash.hot{transform:translateX(-50%) scale(1.12);
+       box-shadow:0 0 0 2px rgba(255,140,120,.9),inset 0 0 22px rgba(255,120,100,.5),
+                  0 10px 24px rgba(0,0,0,.4)}
+  #trash svg{width:26px;height:26px}
+  #trash span{font-size:9.5px;letter-spacing:.1em;opacity:.85}
+  #ghost{position:fixed;z-index:15;display:none;pointer-events:none;width:64px;height:74px;
+       border-radius:12px;background-repeat:no-repeat;background-size:100% 100%;
+       filter:drop-shadow(0 10px 16px rgba(0,0,0,.55));transform:translate(-50%,-50%) rotate(-6deg) scale(1.05)}
+  #ghost.on{display:block}
   #detailCard{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.92);z-index:12;
        display:none;align-items:center;gap:16px;padding:18px 20px;border-radius:26px;
        width:min(420px,86vw);opacity:0;transition:opacity .18s,transform .18s}
@@ -201,6 +215,14 @@
   <div id="bagList"></div>
   <div class="bagHint">点一下看详情 · 再点收起</div>
 </div>
+<div id="trash" class="lg">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 6.8h14M9.4 6.8V4.4h5.2v2.4M6.6 6.8l1 12.3A1.8 1.8 0 0 0 9.4 21h5.2a1.8 1.8 0 0 0 1.8-1.9l1-12.3"/>
+    <path d="M10.2 10.6v6.2M13.8 10.6v6.2"/>
+  </svg>
+  <span>放回</span>
+</div>
+<div id="ghost"></div>
 <div id="detailCard" class="lg panel">
   <div id="dIcon"></div>
   <div class="dInfo">
@@ -1654,8 +1676,8 @@ function buildShop(){
 
   // ---- 立面 ----
   var glassMat = new THREE.MeshStandardMaterial({
-    color: 0x8fb6c8, roughness: 0.06, metalness: 0.35,
-    transparent: true, opacity: 0.15, side: THREE.DoubleSide, depthWrite: false
+    color: 0xb9d6e4, roughness: 0.04, metalness: 0.08,
+    transparent: true, opacity: 0.055, side: THREE.DoubleSide, depthWrite: false
   });
   function paneP(pw, ph, px, py){
     var m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), glassMat);
@@ -2879,21 +2901,62 @@ function pickInit(){
   };
   document.getElementById('dBack').onclick = function(e){
     e.stopPropagation();
-    // 放回货架
-    var b = PICK.detailItem;
-    if (b){
-      var i = PICK.bag.indexOf(b);
-      if (i >= 0) PICK.bag.splice(i, 1);
-      if (b.src) b.src.taken = false;
-      if (b.rebuild) b.rebuild();
-      renderBag();
-    }
-    PICK.detail.classList.remove('on');
+    PICK.detail.classList.remove('on');       // 只是返回
   };
+
   document.getElementById('pickGo').onclick = function(e){
     e.stopPropagation();
     takeTarget();
   };
+
+  // ---- 长按拖到垃圾桶：把商品放回货架 ----
+  PICK.trashEl = document.getElementById('trash');
+  PICK.ghostEl = document.getElementById('ghost');
+  PICK.drag = null;
+
+}
+
+  function startDrag(slot, idx, ev){
+    var b = PICK.bag[idx];
+    if (!b) return;
+    PICK.drag = { idx: idx, item: b };
+    PICK.ghostEl.style.cssText = itemIcon(b.name, b.cell, b.tex, b.cols, b.rows) +
+      ';position:fixed;z-index:15;display:block;pointer-events:none;width:64px;height:74px;' +
+      'border-radius:12px;background-repeat:no-repeat;background-size:100% 100%;' +
+      'filter:drop-shadow(0 10px 16px rgba(0,0,0,.55));transform:translate(-50%,-50%) rotate(-6deg);' +
+      'left:' + ev.clientX + 'px;top:' + ev.clientY + 'px';
+    PICK.trashEl.classList.add('on');
+    slot.style.opacity = '.45';
+  }
+
+function removeFromBag(index){
+  var b = PICK.bag[index];
+  if (!b) return;
+  PICK.bag.splice(index, 1);
+  if (b.src) b.src.taken = false;
+  if (b.rebuild) b.rebuild();
+  renderBag();
+  if (HOLD && HOLD.shown) rebuildBasketContents();
+  if (PICK.bag.length === 0){
+    PICK.trashEl.classList.remove('on');
+    PICK.bagEl.classList.remove('on');
+  }
+}
+
+function endDrag(cx, cy){
+  if (!PICK.drag) return;
+  var el = document.elementFromPoint(cx, cy);
+  var overTrash = false;
+  if (el){
+    var n = el;
+    while (n){ if (n.id === 'trash'){ overTrash = true; break; } n = n.parentNode; }
+  }
+  PICK.trashEl.classList.remove('on', 'hot');
+  PICK.ghostEl.style.display = 'none';
+  PICK.ghostEl.className = '';
+  if (overTrash) removeFromBag(PICK.drag.idx);
+  else renderBag();
+  PICK.drag = null;
 }
 
 function closeBag(){
@@ -2988,11 +3051,38 @@ function renderBag(){
   if (cnt) cnt.textContent = PICK.bag.length;
   var slots = PICK.listEl.querySelectorAll('.slot');
   for (var j = 0; j < slots.length; j++){
-    slots[j].onclick = function(e){
-      e.stopPropagation();
-      var b = PICK.bag[+this.getAttribute('data-i')];
-      showDetail(b);
-    };
+    (function(slot){
+      var timer = null, idx = 0, sx = 0, sy = 0, moved = false;
+      slot.addEventListener('pointerdown', function(e){
+        idx = +slot.getAttribute('data-i'); sx = e.clientX; sy = e.clientY; moved = false;
+        clearTimeout(timer);
+        timer = setTimeout(function(){ startDrag(slot, idx, e); }, 420);
+      });
+      slot.addEventListener('pointermove', function(e){
+        if (!PICK.drag) {
+          if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 12){ clearTimeout(timer); }
+          return;
+        }
+        if (PICK.drag.idx !== idx) return;
+        PICK.ghostEl.style.left = e.clientX + 'px';
+        PICK.ghostEl.style.top = e.clientY + 'px';
+        var el = document.elementFromPoint(e.clientX, e.clientY);
+        var hot = false, n = el;
+        while (n){ if (n.id === 'trash'){ hot = true; break; } n = n.parentNode; }
+        PICK.trashEl.classList.toggle('hot', hot);
+      });
+      slot.addEventListener('pointerup', function(e){
+        clearTimeout(timer);
+        if (PICK.drag && PICK.drag.idx === idx){ endDrag(e.clientX, e.clientY); }
+        else if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < 12){
+          showDetail(PICK.bag[idx]);
+        }
+      });
+      slot.addEventListener('pointercancel', function(){
+        clearTimeout(timer);
+        if (PICK.drag) endDrag(-999, -999);
+      });
+    })(slots[j]);
   }
 }
 
@@ -3130,15 +3220,15 @@ function updateHold(dt){
   var fp = P.mode === 'fp';
   var right = { x: Math.cos(P.yaw), z: -Math.sin(P.yaw) };
   var fwd = { x: -Math.sin(P.yaw), z: -Math.cos(P.yaw) };
-  var lat = fp ? 0.30 : 0.30, fw = fp ? 0.95 : 0.10;
+  var lat = fp ? 0.46 : 0.30, fw = fp ? 0.92 : 0.10;
   var gy = groundY(P.pos.x, P.pos.z);
   G.position.set(
     P.pos.x + right.x * lat + fwd.x * fw,
-    gy + (fp ? 1.04 : 0.92) + P.bobY * 0.4,
+    gy + (fp ? 1.03 : 0.92) + P.bobY * 0.4,
     P.pos.z + right.z * lat + fwd.z * fw
   );
   G.rotation.y = P.yaw + (fp ? 0.25 : 0.15);
-  G.scale.setScalar(fp ? 0.82 : 1);
+  G.scale.setScalar(fp ? 0.80 : 1);
   G.rotation.z = Math.sin(P.phase) * 0.03 * clamp(P.speedNow, 0, 1);
 
   // 飞行动画
@@ -3369,6 +3459,7 @@ function updateDoor(dt){
   for (var i = 0; i < STORE.doorPanes.length; i++){
     var p = STORE.doorPanes[i];
     p.position.x = p.userData.dir * STORE.openAmt * 1.02;
+    p.visible = STORE.openAmt < 0.985;      // 全开后隐藏，门口不再有“黑玻璃”
   }
   var opening = STORE.openAmt > 0.5;
   if (opening !== doorState.store){
@@ -3385,6 +3476,7 @@ function updateDoor(dt){
   for (var j = 0; j < SHOP.doorPanes.length; j++){
     var q = SHOP.doorPanes[j];
     q.position.x = q.userData.dir * SHOP.openAmt * 0.66;
+    q.visible = SHOP.openAmt < 0.985;
   }
   var opening2 = SHOP.openAmt > 0.5;
   if (opening2 !== doorState.shop){
