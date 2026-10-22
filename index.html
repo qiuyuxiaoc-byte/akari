@@ -53,15 +53,15 @@
        padding:8px 16px;border-radius:999px;backdrop-filter:blur(6px);
        opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:normal;max-width:86vw;text-align:center;line-height:1.5}
   #tip.on{opacity:1}
-  #rotate{position:fixed;inset:0;z-index:25;display:none;flex-direction:column;
-          align-items:center;justify-content:center;gap:14px;
-          background:radial-gradient(ellipse at 50% 45%,rgba(8,12,20,.92),rgba(3,5,9,.98))}
-  #rotate.on{display:flex}
-  #rotate .phone{width:74px;height:128px;border:2px solid rgba(190,215,245,.55);border-radius:12px;
-          box-shadow:0 0 24px rgba(120,170,255,.18);animation:tilt 1.9s ease-in-out infinite}
-  @keyframes tilt{0%,30%{transform:rotate(0)}55%,100%{transform:rotate(90deg)}}
-  #rotate .rt{font-size:17px;letter-spacing:.22em;color:#eaf2ff}
-  #rotate .rs{font-size:12px;letter-spacing:.12em;color:rgba(190,210,235,.62)}
+  /* 竖屏时用 CSS 把整个游戏转 90°，微信这种锁竖屏的浏览器也能横着玩 */
+  body.land{width:100vh;height:100vw;position:fixed;top:0;left:0;overflow:hidden;
+            transform-origin:0 0;transform:translate(100vw,0) rotate(90deg)}
+  #rotip{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:26;
+         padding:9px 18px;border-radius:999px;font-size:12.5px;letter-spacing:.12em;
+         color:rgba(232,242,255,.85);background:rgba(12,18,28,.55);
+         border:1px solid rgba(170,200,235,.16);backdrop-filter:blur(6px);
+         opacity:0;transition:opacity .5s;pointer-events:none;white-space:nowrap}
+  #rotip.on{opacity:1}
   #err{position:fixed;left:8px;bottom:4px;z-index:30;font-size:10px;color:#ff8080;
        max-width:60%;white-space:pre-wrap;pointer-events:none}
   .tag{position:fixed;right:18px;top:14px;z-index:5;font-size:10.5px;letter-spacing:.22em;
@@ -90,11 +90,7 @@
   <div id="loading">正在生成场景…</div>
 </div>
 <div id="tip">走近玻璃门，门会自动打开 · 店里有货架和收银台</div>
-<div id="rotate">
-  <div class="phone"></div>
-  <div class="rt">请横屏游玩</div>
-  <div class="rs">把手机转 90° · 画面会自动铺满</div>
-</div>
+<div id="rotip">已切横屏 · 把手机转过来</div>
 <div id="err"></div>
 <script>
 window.__LOG = [];
@@ -1969,17 +1965,26 @@ function hideAudioHint(){
 var CLOCK = { t: 0, last: 0, fps: 60, acc: 0, frames: 0, dpr: 1, quality: 2 };
 var SHELTER = { cur: 0 };
 
-// ---------- 横屏：全屏 + 方向锁定，锁不上就挡一屏 ----------
+// ---------- 横屏：优先真·横屏，做不到就用 CSS 转 90° ----------
+var STARTED = false;
+var ROT = { on: false };
 function isPortrait(){
   return window.innerHeight > window.innerWidth;
 }
-var STARTED = false;
-function updateRotateMask(){
-  var el = document.getElementById('rotate');
+function showRotTip(){
+  var el = document.getElementById('rotip');
   if (!el) return;
-  var p = isPortrait();
-  el.classList.toggle('on', p && STARTED);
-  if (!p){ try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){} }
+  el.classList.add('on');
+  setTimeout(function(){ el.classList.remove('on'); }, 3200);
+}
+function updateRotateMask(){
+  var want = STARTED && isPortrait();
+  if (want === ROT.on) return;
+  ROT.on = want;
+  document.body.classList.toggle('land', want);
+  onResize();
+  if (want) showRotTip();
+  if (!want){ try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){} }
 }
 function goLandscape(){
   var el = document.documentElement;
@@ -2013,6 +2018,7 @@ function bindStick(){
   function move(e){
     if (active === null || e.pointerId !== active) return;
     var dx = e.clientX - cxp, dy = e.clientY - cyp;
+    if (ROT.on){ var sx = dy, sy = -dx; dx = sx; dy = sy; }   // 旋转模式下换算成本地坐标
     var d = Math.sqrt(dx * dx + dy * dy);
     var lim = R;
     if (d > lim){ dx *= lim / d; dy *= lim / d; d = lim; }
@@ -2046,6 +2052,7 @@ function bindLook(){
     if (!dragging || e.pointerId !== pid) return;
     var dx = e.clientX - lx, dy = e.clientY - ly;
     lx = e.clientX; ly = e.clientY;
+    if (ROT.on){ var tx2 = dy, ty2 = -dx; dx = tx2; dy = ty2; }
     PLAYER.yaw -= dx * 0.0042;
     PLAYER.pitch = clamp(PLAYER.pitch - dy * 0.0035, -1.25, 1.25);
     e.preventDefault();
@@ -2189,7 +2196,8 @@ function adaptQuality(fps){
 }
 
 function onResize(){
-  var w = window.innerWidth, h = window.innerHeight;
+  var w = ROT.on ? window.innerHeight : window.innerWidth;
+  var h = ROT.on ? window.innerWidth : window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   var asp = w / h;
@@ -2249,10 +2257,10 @@ function boot(){
   if (window.matchMedia){
     try { window.matchMedia('(pagehide)'); } catch(e){}
   }
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', function(){ setTimeout(function(){ onResize(); updateRotateMask(); }, 300); });
-  onResize();
+  window.addEventListener('resize', function(){ updateRotateMask(); onResize(); });
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ updateRotateMask(); onResize(); }, 300); });
   updateRotateMask();
+  onResize();
 
   // 先渲染一帧，让开始界面背后就有画面
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
