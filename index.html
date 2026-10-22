@@ -109,7 +109,7 @@
        box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -2px 4px rgba(120,150,190,.25),
                   0 4px 10px rgba(0,0,0,.3);font-size:14px;color:#fff;font-weight:600}
   #bagPanel{position:fixed;right:18px;top:78px;z-index:9;display:none;flex-direction:column;
-       width:min(300px,70vw);max-height:max(170px,calc(100vh - 250px));border-radius:24px;padding:12px 12px 8px}
+       width:min(300px,70vw);height:max(196px,calc(100vh - 250px));border-radius:24px;padding:12px 12px 8px}
   #bagPanel.on{display:flex}
   .bagHead{display:flex;align-items:center;gap:8px;font-size:13px;
        letter-spacing:.1em;color:#eaf3ff;padding:0 30px 9px 2px;border-bottom:1px solid rgba(255,255,255,.16)}
@@ -126,8 +126,9 @@
   #bagClose svg{width:23px;height:23px}
   .bagHead #bagSum{font-size:15px;font-weight:600;color:#fff}
   #bagList{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 4px;flex:1;min-height:0;
+       touch-action:pan-y;overscroll-behavior:contain;
        display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:86px;gap:8px;align-content:start}
-  .slot{position:relative;height:86px;border-radius:14px;overflow:hidden;
+  .slot{position:relative;height:86px;border-radius:14px;overflow:hidden;touch-action:pan-y;
        background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.26),rgba(255,255,255,.08));
        box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
   .slot .ico{position:absolute;left:5px;right:5px;top:5px;bottom:17px;background-repeat:no-repeat;background-size:100% 100%;
@@ -160,8 +161,10 @@
   #dPrice{font-size:14px;color:#ffdca8;margin:6px 0 8px;letter-spacing:.04em}
   #dTag{font-size:11px;letter-spacing:.08em;color:rgba(190,214,240,.72);margin-bottom:8px}
   #dDesc{font-size:11.5px;line-height:1.65;color:rgba(232,242,255,.8)}
-  #dBack{margin-top:10px;padding:8px 16px;border-radius:999px;font-size:12px;font-family:inherit;
+  .dBtns{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  #dPut,#dBack{padding:8px 14px;border-radius:999px;font-size:12px;font-family:inherit;
        color:#f2f8ff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3)}
+  #dPut{background:rgba(255,150,120,.22);border-color:rgba(255,170,140,.45)}
   #tip{position:fixed;left:50%;bottom:178px;transform:translateX(-50%);z-index:6;
        font-size:12.5px;letter-spacing:.06em;color:#eef5ff;font-weight:400;text-shadow:0 1px 3px rgba(0,0,0,.5);
        padding:9px 18px;border-radius:999px;
@@ -231,7 +234,7 @@
     <div id="dTag">—</div>
     <div id="dDesc">—</div>
   </div>
-  <button id="dBack">放回</button>
+  <div class="dBtns"><button id="dPut">放回货架</button><button id="dBack">返回</button></div>
 </div>
 <div id="start">
   <h1>雨夜便利店</h1>
@@ -1110,6 +1113,7 @@ function buildStore(){
     fr3.position.set(dir * 1.07, y0 + 1.31, 0); pane.add(fr3);
     pane.position.set(0, 0, frontZ);
     pane.userData.dir = dir;
+    pane.userData.glass = gm;
     doorGroup.add(pane);
     STORE.doorPanes.push(pane);
   }
@@ -1714,6 +1718,7 @@ function buildShop(){
     fr3.position.set(dir * 0.70, y0 + 1.24, 0); pg.add(fr3);
     pg.position.set(0, 0, SH.Z1);
     pg.userData.dir = dir;
+    pg.userData.glass = gm;
     doorG.add(pg);
     SHOP.doorPanes.push(pg);
   }
@@ -1821,7 +1826,7 @@ function buildShop(){
         var li = (b + lv * 3) % LIQDEF.length; var it = LIQDEF[li];
         bottles.push({
           x: xWall + faceDir * 0.16, y: y0 + levels[lv] + 0.03, z: bz,
-          h: it.h, r: it.r, glass: it.glass, cap: it.cap, labelCell: li,
+          nm: it.name, cell: it.cell, h: it.h, r: it.r, glass: it.glass, cap: it.cap, labelCell: li,
           label: it.labelHex, dir: faceDir
         });
       }
@@ -2819,7 +2824,7 @@ var DESC_ITEM = {
   '燕京': { t: '北京 · 啤酒', d: '北京老牌子，麦香比雪花重一点。配烤串正好，凉得越透越好。' }
 };
 // ===== p10 拿取系统：靠近 → 提示 → 拿走 → 购物篮 =====
-var PICK = { list: [], target: null, bag: [], maxDist: 2.9, maxAngle: 0.30, urls: {} };
+var PICK = { list: [], target: null, bag: [], maxDist: 3.1, maxAngle: 0.58, urls: {}, cap: 15 };
 var _pickDir = null;
 
 var PRICE = {
@@ -2902,6 +2907,15 @@ function pickInit(){
   document.getElementById('dBack').onclick = function(e){
     e.stopPropagation();
     PICK.detail.classList.remove('on');       // 只是返回
+  };
+  document.getElementById('dPut').onclick = function(e){
+    e.stopPropagation();
+    var b = PICK.detailItem;
+    if (b){
+      var i = PICK.bag.indexOf(b);
+      if (i >= 0) removeFromBag(i);
+    }
+    PICK.detail.classList.remove('on');
   };
 
   document.getElementById('pickGo').onclick = function(e){
@@ -3004,6 +3018,12 @@ function updatePick(dt){
 function takeTarget(){
   var it = PICK.target;
   if (!it || it.src.taken) return;
+  if (PICK.bag.length >= PICK.cap){
+    var tt = document.getElementById('tip');
+    if (tt){ tt.textContent = '篮子满了（' + PICK.cap + '/' + PICK.cap + '）· 先放回几件'; tt.classList.add('on');
+      clearTimeout(PICK._tipT); PICK._tipT = setTimeout(function(){ tt.classList.remove('on'); }, 1800); }
+    return;
+  }
   it.src.taken = true;
   PICK.bag.push({ name: it.name, dk: it.dk, cell: it.src.cell, tex: it.tex, cols: it.cols, rows: it.rows,
                   price: PRICE[it.dk] || PRICE[it.name] || 5, kind: it.kind, src: it.src, rebuild: it.rebuild });
@@ -3049,38 +3069,46 @@ function renderBag(){
   PICK.sumEl.textContent = '¥' + (sum % 1 === 0 ? sum : sum.toFixed(1));
   var cnt = document.getElementById('bagCount');
   if (cnt) cnt.textContent = PICK.bag.length;
+  var title = document.querySelector('.bagHead .title');
+  if (title) title.textContent = '购物篮 ' + PICK.bag.length + '/' + PICK.cap;
   var slots = PICK.listEl.querySelectorAll('.slot');
   for (var j = 0; j < slots.length; j++){
     (function(slot){
       var timer = null, idx = 0, sx = 0, sy = 0, moved = false;
-      slot.addEventListener('pointerdown', function(e){
-        idx = +slot.getAttribute('data-i'); sx = e.clientX; sy = e.clientY; moved = false;
-        clearTimeout(timer);
-        timer = setTimeout(function(){ startDrag(slot, idx, e); }, 420);
-      });
-      slot.addEventListener('pointermove', function(e){
-        if (!PICK.drag) {
-          if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 12){ clearTimeout(timer); }
+      var pid = null;
+      function onMove(ev){
+        if (ev.pointerId !== pid) return;
+        if (!PICK.drag){
+          if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 12) clearTimeout(timer);
           return;
         }
         if (PICK.drag.idx !== idx) return;
-        PICK.ghostEl.style.left = e.clientX + 'px';
-        PICK.ghostEl.style.top = e.clientY + 'px';
-        var el = document.elementFromPoint(e.clientX, e.clientY);
+        PICK.ghostEl.style.left = ev.clientX + 'px';
+        PICK.ghostEl.style.top = ev.clientY + 'px';
+        var el = document.elementFromPoint(ev.clientX, ev.clientY);
         var hot = false, n = el;
         while (n){ if (n.id === 'trash'){ hot = true; break; } n = n.parentNode; }
         PICK.trashEl.classList.toggle('hot', hot);
-      });
-      slot.addEventListener('pointerup', function(e){
+        ev.preventDefault();
+      }
+      function onUp(ev){
+        if (ev.pointerId !== pid) return;
         clearTimeout(timer);
-        if (PICK.drag && PICK.drag.idx === idx){ endDrag(e.clientX, e.clientY); }
-        else if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < 12){
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        if (PICK.drag && PICK.drag.idx === idx){ endDrag(ev.clientX, ev.clientY); }
+        else if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 12){
           showDetail(PICK.bag[idx]);
         }
-      });
-      slot.addEventListener('pointercancel', function(){
+      }
+      slot.addEventListener('pointerdown', function(e){
+        idx = +slot.getAttribute('data-i'); sx = e.clientX; sy = e.clientY; pid = e.pointerId;
         clearTimeout(timer);
-        if (PICK.drag) endDrag(-999, -999);
+        window.addEventListener('pointermove', onMove, { passive: false });
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+        timer = setTimeout(function(){ startDrag(slot, idx, e); }, 420);
       });
     })(slots[j]);
   }
@@ -3459,7 +3487,7 @@ function updateDoor(dt){
   for (var i = 0; i < STORE.doorPanes.length; i++){
     var p = STORE.doorPanes[i];
     p.position.x = p.userData.dir * STORE.openAmt * 1.02;
-    p.visible = STORE.openAmt < 0.985;      // 全开后隐藏，门口不再有“黑玻璃”
+    if (p.userData.glass) p.userData.glass.visible = STORE.openAmt < 0.985;  // 全开只藏玻璃，门框留着
   }
   var opening = STORE.openAmt > 0.5;
   if (opening !== doorState.store){
@@ -3476,7 +3504,7 @@ function updateDoor(dt){
   for (var j = 0; j < SHOP.doorPanes.length; j++){
     var q = SHOP.doorPanes[j];
     q.position.x = q.userData.dir * SHOP.openAmt * 0.66;
-    q.visible = SHOP.openAmt < 0.985;
+    if (q.userData.glass) q.userData.glass.visible = SHOP.openAmt < 0.985;
   }
   var opening2 = SHOP.openAmt > 0.5;
   if (opening2 !== doorState.shop){
