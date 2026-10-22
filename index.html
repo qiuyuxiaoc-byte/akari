@@ -125,16 +125,23 @@
        padding:0;z-index:10}
   #bagClose svg{width:23px;height:23px}
   .bagHead #bagSum{font-size:15px;font-weight:600;color:#fff}
-  #bagList{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 4px;flex:1;min-height:0;
-       touch-action:pan-y;overscroll-behavior:contain;
+  #bagList{overflow:hidden;padding:8px 4px;flex:1;min-height:0;
+       touch-action:none;overscroll-behavior:contain;
        display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:86px;gap:8px;align-content:start}
-  .slot{position:relative;height:86px;border-radius:14px;overflow:hidden;touch-action:pan-y;
+  .slot{position:relative;height:86px;border-radius:14px;overflow:hidden;touch-action:none;
+       -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
        background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.26),rgba(255,255,255,.08));
        box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
   .slot .ico{position:absolute;left:5px;right:5px;top:5px;bottom:17px;background-repeat:no-repeat;background-size:100% 100%;
        filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
   .slot .nm{position:absolute;left:0;right:0;bottom:0;font-size:9px;text-align:center;
        color:#eaf3ff;background:linear-gradient(transparent,rgba(6,10,18,.72));padding:6px 2px 3px}
+  .bagPager{display:none;align-items:center;justify-content:center;gap:12px;padding:6px 0 2px}
+  .bagPager.on{display:flex}
+  .bagPager span{font-size:11px;letter-spacing:.1em;color:rgba(230,240,255,.75);min-width:32px;text-align:center}
+  .bagPager button{width:32px;height:32px;border-radius:50%;padding:0;font-size:16px;line-height:1;
+       display:flex;align-items:center;justify-content:center;font-family:inherit;color:#eaf3ff}
+  .bagPager button:disabled{opacity:.35}
   .bagHint{font-size:10.5px;color:rgba(226,238,252,.55);text-align:center;padding-top:6px;letter-spacing:.06em}
   #trash{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) scale(.8);z-index:14;
        width:76px;height:76px;border-radius:50%;display:none;flex-direction:column;
@@ -215,6 +222,7 @@
     </svg>
   </button>
   <div class="bagHead"><span class="title">购物篮</span><span id="bagSum">¥0</span></div>
+  <div class="bagPager"><button id="bagPrev" class="lg">‹</button><span id="bagPageNo">1/1</span><button id="bagNext" class="lg">›</button></div>
   <div id="bagList"></div>
   <div class="bagHint">点一下看详情 · 再点收起</div>
 </div>
@@ -1122,6 +1130,12 @@ function buildStore(){
   addCol(LAY.ST_X0, LAY.DOOR_X0, frontZ - 0.12, frontZ + 0.12, 'front');
   addCol(LAY.DOOR_X1, LAY.ST_X1, frontZ - 0.12, frontZ + 0.12, 'front');
 
+  // 门槛条
+  var thr = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.012, 0.16),
+    new THREE.MeshStandardMaterial({ color: 0xbfc4cc, roughness: 0.35, metalness: 0.6 }));
+  thr.position.set(0, y0 + 0.008, frontZ + 0.02);
+  scene.add(thr);
+
   // ---- 招牌灯箱（正面） ----
   var signMat = new THREE.MeshBasicMaterial({ map: TEX.sign });
   var signBox = new THREE.Mesh(new THREE.BoxGeometry(LAY.ST_X1 - LAY.ST_X0 + 0.5, 0.88, 0.16),
@@ -1711,17 +1725,36 @@ function buildShop(){
     var pg = new THREE.Group();
     var gm = new THREE.Mesh(new THREE.PlaneGeometry(0.68, 2.4), glassMat);
     gm.position.set(dir * 0.35, y0 + 1.24, 0); pg.add(gm);
-    var fr = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.05, 0.07), new THREE.MeshLambertMaterial({ color: 0xc8a86a }));
-    fr.position.set(dir * 0.35, y0 + 2.46, 0); pg.add(fr);
-    var fr2 = fr.clone(); fr2.position.y = y0 + 0.06; pg.add(fr2);
-    var fr3 = new THREE.Mesh(new THREE.BoxGeometry(0.035, 2.4, 0.07), new THREE.MeshLambertMaterial({ color: 0xc8a86a }));
-    fr3.position.set(dir * 0.70, y0 + 1.24, 0); pg.add(fr3);
+    var doorFrameMat = new THREE.MeshStandardMaterial({ color: 0xc9a15c, roughness: 0.35, metalness: 0.55 });
+    var fr = new THREE.Mesh(new THREE.BoxGeometry(0.80, 0.07, 0.10), doorFrameMat);
+    fr.position.set(dir * 0.35, y0 + 2.44, 0); pg.add(fr);
+    var fr2 = new THREE.Mesh(new THREE.BoxGeometry(0.80, 0.09, 0.10), doorFrameMat);
+    fr2.position.set(dir * 0.35, y0 + 0.05, 0); pg.add(fr2);
+    for (var sv = 0; sv < 2; sv++){
+      var vr = new THREE.Mesh(new THREE.BoxGeometry(0.055, 2.42, 0.10), doorFrameMat);
+      vr.position.set(dir * (sv ? 0.72 : -0.04), y0 + 1.24, 0); pg.add(vr);
+    }
     pg.position.set(0, 0, SH.Z1);
     pg.userData.dir = dir;
     pg.userData.glass = gm;
     doorG.add(pg);
     SHOP.doorPanes.push(pg);
   }
+
+  // 门槛条 + 门头感应器，让「自动门」一眼看出来
+  var th = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.012, 0.16),
+    new THREE.MeshStandardMaterial({ color: 0xbfc4cc, roughness: 0.35, metalness: 0.6 }));
+  th.position.set((SH.DX0 + SH.DX1) / 2, y0 + 0.008, SH.Z1 + 0.02);
+  scene.add(th);
+  var sensor = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.09, 0.12),
+    new THREE.MeshLambertMaterial({ color: 0x1d2228 }));
+  sensor.position.set((SH.DX0 + SH.DX1) / 2, y0 + 2.33, SH.Z1 + 0.06);
+  scene.add(sensor);
+  var led = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.03),
+    new THREE.MeshBasicMaterial({ color: 0x8effc8 }));
+  led.position.set((SH.DX0 + SH.DX1) / 2, y0 + 2.33, SH.Z1 + 0.125);
+  scene.add(led);
+  addGlow((SH.DX0 + SH.DX1) / 2, y0 + 2.33, SH.Z1 + 0.16, 0.5, 0.24, 0x8effc8, 0.5);
 
   // ---- 招牌 ----
   SHOP.signTex = shopSignTex();
@@ -2823,8 +2856,9 @@ var DESC_ITEM = {
   '雪花': { t: '全国 · 淡爽型啤酒', d: '气足、泡沫细、味道淡。夜宵摊上出现次数最多的那一瓶。' },
   '燕京': { t: '北京 · 啤酒', d: '北京老牌子，麦香比雪花重一点。配烤串正好，凉得越透越好。' }
 };
-// ===== p10 拿取系统：靠近 → 提示 → 拿走 → 购物篮 =====
-var PICK = { list: [], target: null, bag: [], maxDist: 3.1, maxAngle: 0.58, urls: {}, cap: 15 };
+// ===== p10 拿取系统（重写版）：拿取 / 购物篮分页 / 长按拖拽放回 / 商品详情 =====
+var PICK = { list: [], target: null, bag: [], maxDist: 2.45, maxAngle: 0.42,
+             urls: {}, cap: 15, page: 0, drag: null };
 var _pickDir = null;
 
 var PRICE = {
@@ -2833,19 +2867,18 @@ var PRICE = {
   '冰红茶': 3.5, '咖啡': 8.0, '口香糖': 6.0, '虾条': 3.5, '纸巾': 5.0,
   '中华': 65, '红塔山': 8, '玉溪': 23, '云烟': 22, '利群': 20, '泰山': 10, '黄鹤楼': 20,
   '芙蓉王': 25, '南京': 21, '双喜': 9, '七匹狼': 11, '黄金叶': 100, '白沙': 5, '苏烟': 45,
-  '钻石': 20, '娇子': 15,
-  '云烟紫': 22, '云烟软': 22, '利群阳光': 35,
+  '钻石': 20, '娇子': 15, '云烟紫': 22, '云烟软': 22, '利群阳光': 35,
   '茅台': 1499, '五粮液': 899, '泸州': 89, '汾酒': 59, '洋河': 129, '剑南春': 399,
   '牛栏山': 15, '江小白': 25, '青岛': 5, '崂山': 4, '雪花': 5, '燕京': 4
 };
 var UNIT_WORD = { snack: '包', cig: '包', liq: '瓶' };
+var KIND_DESC = {
+  snack: '24 小时便利店的常备零食，货架上还有不少。',
+  cig: '柜台后方陈列的正品卷烟，本店承诺假一赔十。',
+  liq: '货架上的名酒，扫码结账可开小票。'
+};
 
-function atlasURL(tex){
-  for (var k in TEX){ if (TEX[k] === tex) return TEX[atlasKey(tex)]; }
-  return '';
-}
 function atlasKey(tex){
-  if (tex === TEX.snack) return 'snack';
   if (tex === TEX.tobacco) return 'tobacco';
   if (tex === TEX.liquor) return 'liquor';
   return 'snack';
@@ -2857,35 +2890,38 @@ function texURL(tex){
   }
   return PICK.urls[key];
 }
+function itemIcon(cell, tex, cols, rows){
+  var url = texURL(tex);
+  var px = cols > 1 ? (cell[0] / (cols - 1)) * 100 : 0;
+  var py = rows > 1 ? (cell[1] / (rows - 1)) * 100 : 0;
+  return 'background-image:url(' + url + ');background-size:' + (cols * 100) + '% ' + (rows * 100) +
+         '%;background-position:' + px + '% ' + py + '%;background-repeat:no-repeat';
+}
 
-// 把一批商品数组登记成可拿取
 function registerPickList(arr, tex, kind, rebuild, yOf){
-  var cols = (tex === TEX.snack) ? 6 : (tex === TEX.tobacco ? 6 : 12);
-  var rows = (tex === TEX.snack) ? 4 : (tex === TEX.tobacco ? 4 : 2);
+  var cols = (tex === TEX.liquor) ? 12 : 6;
+  var rows = (tex === TEX.liquor) ? 2 : 4;
   for (var i = 0; i < arr.length; i++){
     var it = arr[i];
     if (!it || !it.cell) continue;
     PICK.list.push({
       src: it, kind: kind, tex: tex, cols: cols, rows: rows,
       name: it.nm || '商品', dk: it.dk || it.nm || '商品',
-      x: it.x, y: (yOf ? yOf(it) : it.y), z: it.z,
-      rebuild: rebuild
+      x: it.x, y: (yOf ? yOf(it) : it.y), z: it.z, rebuild: rebuild
     });
   }
 }
 
-// 货架重绘（拿走一个就重建一次几何，几毫秒）
 function rebuildMesh(mesh, items, tex){
   var alive = [];
   for (var i = 0; i < items.length; i++) if (!items[i].taken) alive.push(items[i]);
-  var geo = mesh.userData.mode === 'bottle'
-    ? batchBottles(alive, LIQ_ATLAS).glass
-    : batchLabeled(alive, tex === TEX.tobacco ? TOB_ATLAS : (tex === TEX.liquor ? LIQ_ATLAS : ATLAS));
+  var geo = batchLabeled(alive, tex === TEX.tobacco ? TOB_ATLAS : (tex === TEX.liquor ? LIQ_ATLAS : ATLAS));
   if (!geo) return;
   mesh.geometry.dispose();
   mesh.geometry = geo;
 }
 
+// ---------------- 初始化 ----------------
 function pickInit(){
   PICK.tipEl = document.getElementById('pickTip');
   PICK.nameEl = document.getElementById('pickName');
@@ -2894,6 +2930,8 @@ function pickInit(){
   PICK.sumEl = document.getElementById('bagSum');
   PICK.detail = document.getElementById('detailCard');
   PICK.btnBag = document.getElementById('btnBag');
+  PICK.trashEl = document.getElementById('trash');
+  PICK.ghostEl = document.getElementById('ghost');
 
   PICK.btnBag.onclick = function(e){
     e.stopPropagation();
@@ -2904,9 +2942,13 @@ function pickInit(){
     e.stopPropagation();
     PICK.bagEl.classList.remove('on');
   };
+  document.getElementById('pickGo').onclick = function(e){
+    e.stopPropagation();
+    takeTarget();
+  };
   document.getElementById('dBack').onclick = function(e){
     e.stopPropagation();
-    PICK.detail.classList.remove('on');       // 只是返回
+    PICK.detail.classList.remove('on');
   };
   document.getElementById('dPut').onclick = function(e){
     e.stopPropagation();
@@ -2917,93 +2959,35 @@ function pickInit(){
     }
     PICK.detail.classList.remove('on');
   };
-
-  document.getElementById('pickGo').onclick = function(e){
-    e.stopPropagation();
-    takeTarget();
-  };
-
-  // ---- 长按拖到垃圾桶：把商品放回货架 ----
-  PICK.trashEl = document.getElementById('trash');
-  PICK.ghostEl = document.getElementById('ghost');
-  PICK.drag = null;
-
+  var bp = document.getElementById('bagPrev'), bn = document.getElementById('bagNext');
+  if (bp) bp.onclick = function(e){ e.stopPropagation(); PICK.page--; renderBag(); };
+  if (bn) bn.onclick = function(e){ e.stopPropagation(); PICK.page++; renderBag(); };
 }
 
-  function startDrag(slot, idx, ev){
-    var b = PICK.bag[idx];
-    if (!b) return;
-    PICK.drag = { idx: idx, item: b };
-    PICK.ghostEl.style.cssText = itemIcon(b.name, b.cell, b.tex, b.cols, b.rows) +
-      ';position:fixed;z-index:15;display:block;pointer-events:none;width:64px;height:74px;' +
-      'border-radius:12px;background-repeat:no-repeat;background-size:100% 100%;' +
-      'filter:drop-shadow(0 10px 16px rgba(0,0,0,.55));transform:translate(-50%,-50%) rotate(-6deg);' +
-      'left:' + ev.clientX + 'px;top:' + ev.clientY + 'px';
-    PICK.trashEl.classList.add('on');
-    slot.style.opacity = '.45';
-  }
-
-function removeFromBag(index){
-  var b = PICK.bag[index];
-  if (!b) return;
-  PICK.bag.splice(index, 1);
-  if (b.src) b.src.taken = false;
-  if (b.rebuild) b.rebuild();
-  renderBag();
-  if (HOLD && HOLD.shown) rebuildBasketContents();
-  if (PICK.bag.length === 0){
-    PICK.trashEl.classList.remove('on');
-    PICK.bagEl.classList.remove('on');
-  }
-}
-
-function endDrag(cx, cy){
-  if (!PICK.drag) return;
-  var el = document.elementFromPoint(cx, cy);
-  var overTrash = false;
-  if (el){
-    var n = el;
-    while (n){ if (n.id === 'trash'){ overTrash = true; break; } n = n.parentNode; }
-  }
-  PICK.trashEl.classList.remove('on', 'hot');
-  PICK.ghostEl.style.display = 'none';
-  PICK.ghostEl.className = '';
-  if (overTrash) removeFromBag(PICK.drag.idx);
-  else renderBag();
-  PICK.drag = null;
-}
-
-function closeBag(){
-  if (PICK.bagEl) PICK.bagEl.classList.remove('on');
-  if (PICK.detail) PICK.detail.classList.remove('on');
-}
-
+// ---------------- 拿取 ----------------
 function updatePick(dt){
   if (!PICK.tipEl || !STARTED) return;
-  // 面板打开时不显示拿取提示
-  if ((PICK.bagEl && PICK.bagEl.classList.contains('on')) ||
-      (PICK.detail && PICK.detail.classList.contains('on'))){
+  if (PICK.bagEl.classList.contains('on') || PICK.detail.classList.contains('on')){
     PICK.tipEl.classList.remove('on');
     PICK.target = null;
     return;
   }
-  // 用玩家的眼睛和朝向判定（第三人称时相机在身后，不能用相机）
   var dir = _pickDir || (_pickDir = new THREE.Vector3());
   dir.set(-Math.sin(PLAYER.yaw) * Math.cos(PLAYER.pitch),
            Math.sin(PLAYER.pitch),
           -Math.cos(PLAYER.yaw) * Math.cos(PLAYER.pitch));
-  var cp = { x: PLAYER.pos.x, y: PLAYER.pos.y + PLAYER.eye, z: PLAYER.pos.z };
+  var px = PLAYER.pos.x, py = PLAYER.pos.y + PLAYER.eye, pz = PLAYER.pos.z;
   var best = null, bestScore = 1e9;
   for (var i = 0; i < PICK.list.length; i++){
     var it = PICK.list[i];
     if (it.src.taken) continue;
-    var dx = it.x - cp.x, dy = it.y - cp.y, dz = it.z - cp.z;
+    var dx = it.x - px, dy = it.y - py, dz = it.z - pz;
     var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
     if (d > PICK.maxDist) continue;
     var dot = (dx * dir.x + dy * dir.y + dz * dir.z) / (d || 1);
     var ang = Math.acos(Math.max(-1, Math.min(1, dot)));
     if (ang > PICK.maxAngle) continue;
-    var score = ang * 2.2 + d * 0.22;
+    var score = ang * 2.4 + d * 0.25;
     if (score < bestScore){ bestScore = score; best = it; }
   }
   PICK.target = best;
@@ -3015,123 +2999,166 @@ function updatePick(dt){
   }
 }
 
+function toast(msg){
+  var t = document.getElementById('tip');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(PICK._tipT);
+  PICK._tipT = setTimeout(function(){ t.classList.remove('on'); }, 1700);
+}
+
 function takeTarget(){
   var it = PICK.target;
   if (!it || it.src.taken) return;
-  if (PICK.bag.length >= PICK.cap){
-    var tt = document.getElementById('tip');
-    if (tt){ tt.textContent = '篮子满了（' + PICK.cap + '/' + PICK.cap + '）· 先放回几件'; tt.classList.add('on');
-      clearTimeout(PICK._tipT); PICK._tipT = setTimeout(function(){ tt.classList.remove('on'); }, 1800); }
-    return;
-  }
+  if (PICK.bag.length >= PICK.cap){ toast('篮子满了（' + PICK.cap + '/' + PICK.cap + '）· 先放回几件'); return; }
   it.src.taken = true;
-  PICK.bag.push({ name: it.name, dk: it.dk, cell: it.src.cell, tex: it.tex, cols: it.cols, rows: it.rows,
-                  price: PRICE[it.dk] || PRICE[it.name] || 5, kind: it.kind, src: it.src, rebuild: it.rebuild });
+  PICK.bag.push({
+    name: it.name, dk: it.dk, cell: it.src.cell, tex: it.tex, cols: it.cols, rows: it.rows,
+    price: PRICE[it.dk] || PRICE[it.name] || 5, kind: it.kind, src: it.src, rebuild: it.rebuild
+  });
   PICK.target = null;
   PICK.tipEl.classList.remove('on');
   if (it.rebuild) it.rebuild();
-  // 飞进篮子的动画
-  try {
-    flyToBasket({ tex: it.tex, cell: it.src.cell, cols: it.cols, from: new THREE.Vector3(it.x, it.y, it.z) });
-  } catch(e){}
-  if (HOLD && HOLD.shown) rebuildBasketContents();
+  try { flyToBasket({ tex: it.tex, cell: it.src.cell, cols: it.cols, from: new THREE.Vector3(it.x, it.y, it.z) }); } catch(e){}
+  if (typeof HOLD !== 'undefined' && HOLD.shown) rebuildBasketContents();
+  PICK.page = 999;
   renderBag();
   if (window.AUD && AUD.pick) AUD.pick();
-  var t = document.getElementById('tip');
-  if (t){
-    t.textContent = '已放入购物篮：' + it.name;
-    t.classList.add('on');
-    clearTimeout(PICK._tipT);
-    PICK._tipT = setTimeout(function(){ t.classList.remove('on'); }, 1600);
-  }
+  toast('已放入购物篮：' + it.name);
 }
 
-function itemIcon(name, cell, tex, cols, rows){
-  var url = texURL(tex);
-  var c = cell[0], r = cell[1];
-  var px = cols > 1 ? (c / (cols - 1)) * 100 : 0;
-  var py = rows > 1 ? (r / (rows - 1)) * 100 : 0;
-  return 'background-image:url(' + url + ');background-size:' + (cols * 100) + '% ' + (rows * 100) +
-         '%;background-position:' + px + '% ' + py + '%;background-repeat:no-repeat';
-}
-
+// ---------------- 购物篮 ----------------
 function renderBag(){
   if (!PICK.listEl) return;
+  var PER = 6;
+  var pages = Math.max(1, Math.ceil(PICK.bag.length / PER));
+  if (PICK.page === undefined) PICK.page = 0;
+  if (PICK.page > pages - 1) PICK.page = pages - 1;
+  if (PICK.page < 0) PICK.page = 0;
+  var from = PICK.page * PER, to = Math.min(PICK.bag.length, from + PER);
   var sum = 0, html = '';
-  for (var i = 0; i < PICK.bag.length; i++){
-    var b = PICK.bag[i];
-    sum += b.price;
-    html += '<div class="slot" data-i="' + i + '">' +
-            '<div class="ico" style="' + itemIcon(b.name, b.cell, b.tex, b.cols, b.rows) + '"></div>' +
+  for (var i = 0; i < PICK.bag.length; i++) sum += PICK.bag[i].price;
+  for (var k = from; k < to; k++){
+    var b = PICK.bag[k];
+    html += '<div class="slot" data-i="' + k + '">' +
+            '<div class="ico" style="' + itemIcon(b.cell, b.tex, b.cols, b.rows) + '"></div>' +
             '<div class="nm">' + b.name + '</div></div>';
   }
-  PICK.listEl.innerHTML = html || '<div class="bagHint" style="grid-column:1/-1">篮子还是空的 · 走近货架点「拿」</div>';
+  if (!html) html = '<div class="bagHint" style="grid-column:1/-1">篮子还是空的 · 走近货架点「拿」</div>';
+  PICK.listEl.innerHTML = html;
   PICK.sumEl.textContent = '¥' + (sum % 1 === 0 ? sum : sum.toFixed(1));
   var cnt = document.getElementById('bagCount');
   if (cnt) cnt.textContent = PICK.bag.length;
   var title = document.querySelector('.bagHead .title');
   if (title) title.textContent = '购物篮 ' + PICK.bag.length + '/' + PICK.cap;
-  var slots = PICK.listEl.querySelectorAll('.slot');
-  for (var j = 0; j < slots.length; j++){
-    (function(slot){
-      var timer = null, idx = 0, sx = 0, sy = 0, moved = false;
-      var pid = null;
-      function onMove(ev){
-        if (ev.pointerId !== pid) return;
-        if (!PICK.drag){
-          if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 12) clearTimeout(timer);
-          return;
-        }
-        if (PICK.drag.idx !== idx) return;
-        PICK.ghostEl.style.left = ev.clientX + 'px';
-        PICK.ghostEl.style.top = ev.clientY + 'px';
-        var el = document.elementFromPoint(ev.clientX, ev.clientY);
-        var hot = false, n = el;
-        while (n){ if (n.id === 'trash'){ hot = true; break; } n = n.parentNode; }
-        PICK.trashEl.classList.toggle('hot', hot);
-        ev.preventDefault();
-      }
-      function onUp(ev){
-        if (ev.pointerId !== pid) return;
-        clearTimeout(timer);
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-        window.removeEventListener('pointercancel', onUp);
-        if (PICK.drag && PICK.drag.idx === idx){ endDrag(ev.clientX, ev.clientY); }
-        else if (Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 12){
-          showDetail(PICK.bag[idx]);
-        }
-      }
-      slot.addEventListener('pointerdown', function(e){
-        idx = +slot.getAttribute('data-i'); sx = e.clientX; sy = e.clientY; pid = e.pointerId;
-        clearTimeout(timer);
-        window.addEventListener('pointermove', onMove, { passive: false });
-        window.addEventListener('pointerup', onUp);
-        window.addEventListener('pointercancel', onUp);
-        timer = setTimeout(function(){ startDrag(slot, idx, e); }, 420);
-      });
-    })(slots[j]);
+  var pg = document.querySelector('.bagPager');
+  if (pg){
+    pg.classList.toggle('on', pages > 1);
+    document.getElementById('bagPageNo').textContent = (PICK.page + 1) + '/' + pages;
+    document.getElementById('bagPrev').disabled = PICK.page <= 0;
+    document.getElementById('bagNext').disabled = PICK.page >= pages - 1;
   }
+  var slots = PICK.listEl.querySelectorAll('.slot');
+  for (var j = 0; j < slots.length; j++) bindSlot(slots[j]);
 }
 
-var DESC = {
-  snack: '24 小时便利店的常备零食，货架上还有不少。',
-  cig: '柜台后方陈列的正品卷烟，本店承诺假一赔十。',
-  liq: '货架上的名酒，扫码结账可开小票。'
-};
+function removeFromBag(index){
+  var b = PICK.bag[index];
+  if (!b) return;
+  PICK.bag.splice(index, 1);
+  if (b.src) b.src.taken = false;
+  if (b.rebuild) b.rebuild();
+  if (typeof HOLD !== 'undefined' && HOLD.shown) rebuildBasketContents();
+  if (PICK.bag.length === 0){
+    PICK.trashEl.classList.remove('on');
+    PICK.bagEl.classList.remove('on');
+  }
+  renderBag();
+}
 
+// ---------------- 长按拖到垃圾桶 ----------------
+function startDrag(slot, idx, ev){
+  var b = PICK.bag[idx];
+  if (!b) return;
+  PICK.drag = { idx: idx, item: b };
+  PICK.ghostEl.style.cssText = 'position:fixed;z-index:15;display:block;pointer-events:none;' +
+    'width:64px;height:74px;border-radius:12px;background-repeat:no-repeat;background-size:100% 100%;' +
+    'filter:drop-shadow(0 10px 16px rgba(0,0,0,.55));transform:translate(-50%,-50%) rotate(-6deg);' +
+    'left:' + ev.clientX + 'px;top:' + ev.clientY + 'px;' + itemIcon(b.cell, b.tex, b.cols, b.rows);
+  PICK.trashEl.classList.add('on');
+  slot.style.opacity = '.45';
+}
+
+function moveGhost(x, y){
+  PICK.ghostEl.style.left = x + 'px';
+  PICK.ghostEl.style.top = y + 'px';
+  var el = document.elementFromPoint(x, y), hot = false, n = el;
+  while (n){ if (n.id === 'trash'){ hot = true; break; } n = n.parentNode; }
+  PICK.trashEl.classList.toggle('hot', hot);
+}
+
+function endDrag(cx, cy){
+  if (!PICK.drag) return;
+  var el = document.elementFromPoint(cx, cy), over = false, n = el;
+  while (n){ if (n.id === 'trash'){ over = true; break; } n = n.parentNode; }
+  PICK.trashEl.classList.remove('on', 'hot');
+  PICK.ghostEl.style.display = 'none';
+  if (over) removeFromBag(PICK.drag.idx);
+  else renderBag();
+  PICK.drag = null;
+}
+
+function bindSlot(slot){
+  var pid = null, sx = 0, sy = 0, mode = 'idle', timer = null;
+  slot.addEventListener('pointerdown', function(e){
+    pid = e.pointerId; sx = e.clientX; sy = e.clientY; mode = 'wait';
+    try { slot.setPointerCapture(pid); } catch(err){}
+    clearTimeout(timer);
+    timer = setTimeout(function(){
+      if (mode === 'wait'){ mode = 'drag'; startDrag(slot, +slot.getAttribute('data-i'), { clientX: sx, clientY: sy }); }
+    }, 380);
+  });
+  slot.addEventListener('pointermove', function(e){
+    if (e.pointerId !== pid) return;
+    if (mode === 'wait' && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 10){
+      clearTimeout(timer); mode = 'idle';
+    }
+    if (mode === 'drag'){ moveGhost(e.clientX, e.clientY); e.preventDefault(); }
+  });
+  slot.addEventListener('pointerup', function(e){
+    if (e.pointerId !== pid) return;
+    clearTimeout(timer);
+    if (mode === 'drag') endDrag(e.clientX, e.clientY);
+    else if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < 10) showDetail(PICK.bag[+slot.getAttribute('data-i')]);
+    mode = 'idle'; pid = null;
+  });
+  slot.addEventListener('pointercancel', function(){
+    clearTimeout(timer);
+    if (mode === 'drag') endDrag(-999, -999);
+    mode = 'idle'; pid = null;
+  });
+  slot.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+}
+
+// ---------------- 详情 ----------------
 function showDetail(b){
   if (!b) return;
   PICK.detailItem = b;
-  document.getElementById('dIcon').style.cssText = itemIcon(b.name, b.cell, b.tex, b.cols, b.rows) + ';background-size:' + (b.cols*100) + '% ' + (b.rows*100) + '%';
+  document.getElementById('dIcon').style.cssText = itemIcon(b.cell, b.tex, b.cols, b.rows);
   document.getElementById('dName').textContent = b.name;
   document.getElementById('dPrice').textContent = '¥' + (b.price % 1 === 0 ? b.price : b.price.toFixed(1)) +
     ' · ' + (UNIT_WORD[b.kind] || '件');
   var info = (typeof DESC_ITEM !== 'undefined' && DESC_ITEM[b.dk]) || null;
   document.getElementById('dTag').textContent = info ? info.t : '';
-  document.getElementById('dDesc').textContent = info ? info.d : (DESC[b.kind] || '');
+  document.getElementById('dDesc').textContent = info ? info.d : (KIND_DESC[b.kind] || '');
   PICK.bagEl.classList.remove('on');
   PICK.detail.classList.add('on');
+}
+
+function closeBag(){
+  if (PICK.bagEl) PICK.bagEl.classList.remove('on');
+  if (PICK.detail) PICK.detail.classList.remove('on');
 }
 // ===== p11 手持购物篮 + 装进篮子的飞行动画 =====
 var HOLD = { group: null, cards: [], fly: [], shown: false };
