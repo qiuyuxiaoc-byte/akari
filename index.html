@@ -66,8 +66,8 @@
   #hud .big{font-size:15px;color:rgba(240,246,255,.9);font-variant-numeric:tabular-nums}
   #ver{font-size:10px;color:rgba(190,210,235,.28);letter-spacing:.05em}
   #fps{font-size:11px;color:rgba(200,215,235,.35)}
-  #stick{position:fixed;left:22px;bottom:26px;width:130px;height:130px;z-index:6;
-         border-radius:50%;opacity:.55;transition:opacity .25s,left .2s ease-out,top .2s ease-out}
+  #stick{position:fixed;left:54px;bottom:26px;width:130px;height:130px;z-index:6;
+         border-radius:50%;opacity:.62;transition:opacity .22s}
   #stick.on{opacity:1;transition:opacity .12s}
   #knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;
         border-radius:50%;
@@ -214,7 +214,7 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10221702</div>
+  <div id="ver">v10221708</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -3496,56 +3496,34 @@ function goLandscape(){
   setTimeout(function(){ onResize(); updateRotateMask(); }, 260);
 }
 
-// ---------- 浮动摇杆 ----------
-function toLocalPt(cx, cy){
-  if (ROT.on) return { x: cy, y: window.innerWidth - cx };
-  return { x: cx, y: cy };
-}
-function bodyW(){ return ROT.on ? window.innerHeight : window.innerWidth; }
-
+// ---------- 固定摇杆（按在摇杆身上，拖出界也能继续） ----------
 function bindStick(){
   var base = document.getElementById('stick');
   var knob = document.getElementById('knob');
-  var active = null, ox = 0, oy = 0, R = 52;
+  var active = null, cxp = 0, cyp = 0, R = 52;
 
-  function homeStick(){
-    base.style.transition = '';
-    base.style.left = '22px';
-    base.style.top = 'auto';
-    base.style.bottom = '26px';
-  }
   function resetKnob(){
     knob.style.transform = 'translate(0px,0px)';
     knob.style.setProperty('--kx', '34%');
     knob.style.setProperty('--ky', '30%');
   }
-  function moveStick(x, y){
-    base.style.transition = 'none';
-    base.style.bottom = 'auto';
-    base.style.left = (x - 65) + 'px';
-    base.style.top = (y - 65) + 'px';
-  }
-
-  window.addEventListener('pointerdown', function(e){
+  function start(e){
     if (active !== null) return;
-    var btn = e.target.closest ? e.target.closest('.lg') : null;
-    if (btn && !btn.closest('#stick')) return;                  // 按钮不启动摇杆（摇杆自己除外）
-    var lp = toLocalPt(e.clientX, e.clientY);
-    if (lp.x > bodyW() * 0.46) return;                          // 只有左半屏
+    var r = base.getBoundingClientRect();
+    cxp = r.left + r.width / 2;
+    cyp = r.top + r.height / 2;
+    R = r.width * 0.42;
     active = e.pointerId;
-    ox = lp.x; oy = lp.y;
-    moveStick(ox, oy);
-    resetKnob();
     base.classList.add('on');
     INPUT.touchStick = true;
-    spawnRipple(base, e.clientX, e.clientY);
     try { base.setPointerCapture(active); } catch(err){}
-  });
-
-  window.addEventListener('pointermove', function(e){
+    spawnRipple(base, e.clientX, e.clientY);
+    move(e);
+    e.preventDefault();
+  }
+  function move(e){
     if (e.pointerId !== active) return;
-    var lp = toLocalPt(e.clientX, e.clientY);
-    var dx = lp.x - ox, dy = lp.y - oy;
+    var dx = e.clientX - cxp, dy = e.clientY - cyp;
     if (ROT.on){ var tx = dy, ty = -dx; dx = tx; dy = ty; }
     var d = Math.sqrt(dx * dx + dy * dy);
     if (d > R){ dx *= R / d; dy *= R / d; d = R; }
@@ -3556,18 +3534,18 @@ function bindStick(){
     INPUT.jy = -dy / R;
     INPUT.run = d > R * 0.86;
     e.preventDefault();
-  }, { passive: false });
-
+  }
   function end(e){
     if (e.pointerId !== active) return;
     active = null; INPUT.touchStick = false;
     INPUT.jx = 0; INPUT.jy = 0; INPUT.run = false;
     base.classList.remove('on');
     resetKnob();
-    homeStick();
   }
-  window.addEventListener('pointerup', end);
-  window.addEventListener('pointercancel', end);
+  base.addEventListener('pointerdown', start);
+  base.addEventListener('pointermove', move, { passive: false });
+  base.addEventListener('pointerup', end);
+  base.addEventListener('pointercancel', end);
 }
 
 // ---------- 水波按压 ----------
@@ -3599,7 +3577,6 @@ function bindLook(){
   var tapT = 0, tapX = 0, tapY = 0, tapMoved = 0;
   function down(e){
     if (e.target !== canvas) return;
-    if (toLocalPt(e.clientX, e.clientY).x < bodyW() * 0.46) return;   // 左半屏是摇杆
     dragging = true; pid = e.pointerId; lx = e.clientX; ly = e.clientY;
     tapT = performance.now(); tapX = e.clientX; tapY = e.clientY; tapMoved = 0;
   }
