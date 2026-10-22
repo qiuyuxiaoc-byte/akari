@@ -88,6 +88,9 @@
         font-family:inherit;color:#f2f7ff;font-weight:500;
         text-shadow:0 1px 3px rgba(0,0,0,.55)}
   #btns button.off{color:rgba(210,222,236,.55)}
+  #btnSound .slash{display:none}
+  #btnSound.off .wv{display:none}
+  #btnSound.off .slash{display:block}
   #start{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
          align-items:center;justify-content:center;gap:12px;text-align:center;
          background:radial-gradient(ellipse at 50% 60%,rgba(6,10,18,.72),rgba(3,5,9,.94));
@@ -211,7 +214,7 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10221654</div>
+  <div id="ver">v10221702</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -223,8 +226,20 @@
     </svg>
     <span id="bagCount">0</span>
   </button>
-  <button id="btnView" class="lg">视角</button>
-  <button id="btnSound" class="lg">音效</button>
+  <button id="btnView" class="lg iconBtn" aria-label="切换视角">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.5 8.6A3.1 3.1 0 0 1 6.6 5.5h10.8a3.1 3.1 0 0 1 3.1 3.1v6.8a3.1 3.1 0 0 1-3.1 3.1H6.6a3.1 3.1 0 0 1-3.1-3.1z"/>
+      <circle cx="12" cy="12" r="2.7"/>
+      <path d="M9.6 2.6 7 5.5M14.4 2.6 17 5.5"/>
+    </svg>
+  </button>
+  <button id="btnSound" class="lg iconBtn" aria-label="音效开关">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 9.4h3.3L12 5.4v13.2L7.3 14.6H4z"/>
+      <g class="wv"><path d="M15.4 9.2a4.1 4.1 0 0 1 0 5.6"/><path d="M17.9 6.7a7.6 7.6 0 0 1 0 10.6"/></g>
+      <path class="slash" d="M15.6 9.4l4.4 5.2" stroke-width="1.9"/>
+    </svg>
+  </button>
 </div>
 <div id="pickTip" class="lg"><span id="pickName">—</span><span id="pickGo">拿</span></div>
 <div id="bagPanel" class="lg panel">
@@ -3513,7 +3528,8 @@ function bindStick(){
 
   window.addEventListener('pointerdown', function(e){
     if (active !== null) return;
-    if (e.target.closest && e.target.closest('.lg')) return;   // 按钮上的点击不启动摇杆
+    var btn = e.target.closest ? e.target.closest('.lg') : null;
+    if (btn && !btn.closest('#stick')) return;                  // 按钮不启动摇杆（摇杆自己除外）
     var lp = toLocalPt(e.clientX, e.clientY);
     if (lp.x > bodyW() * 0.46) return;                          // 只有左半屏
     active = e.pointerId;
@@ -3885,7 +3901,6 @@ function boot(){
   var sbtn = document.getElementById('btnSound');
   try { if (localStorage.getItem('akari_mute') === '1') { AUD.toggleMute(); } } catch(err){}
   function syncSoundBtn(){
-    sbtn.textContent = AUD.muted ? '静音' : '音效';
     sbtn.classList.toggle('off', !!AUD.muted);
   }
   syncSoundBtn();
