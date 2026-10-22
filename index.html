@@ -53,6 +53,15 @@
        padding:8px 16px;border-radius:999px;backdrop-filter:blur(6px);
        opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:normal;max-width:86vw;text-align:center;line-height:1.5}
   #tip.on{opacity:1}
+  #rotate{position:fixed;inset:0;z-index:25;display:none;flex-direction:column;
+          align-items:center;justify-content:center;gap:14px;
+          background:radial-gradient(ellipse at 50% 45%,rgba(8,12,20,.92),rgba(3,5,9,.98))}
+  #rotate.on{display:flex}
+  #rotate .phone{width:74px;height:128px;border:2px solid rgba(190,215,245,.55);border-radius:12px;
+          box-shadow:0 0 24px rgba(120,170,255,.18);animation:tilt 1.9s ease-in-out infinite}
+  @keyframes tilt{0%,30%{transform:rotate(0)}55%,100%{transform:rotate(90deg)}}
+  #rotate .rt{font-size:17px;letter-spacing:.22em;color:#eaf2ff}
+  #rotate .rs{font-size:12px;letter-spacing:.12em;color:rgba(190,210,235,.62)}
   #err{position:fixed;left:8px;bottom:4px;z-index:30;font-size:10px;color:#ff8080;
        max-width:60%;white-space:pre-wrap;pointer-events:none}
   .tag{position:fixed;right:18px;top:14px;z-index:5;font-size:10.5px;letter-spacing:.22em;
@@ -81,6 +90,11 @@
   <div id="loading">正在生成场景…</div>
 </div>
 <div id="tip">走近玻璃门，门会自动打开 · 店里有货架和收银台</div>
+<div id="rotate">
+  <div class="phone"></div>
+  <div class="rt">请横屏游玩</div>
+  <div class="rs">把手机转 90° · 画面会自动铺满</div>
+</div>
 <div id="err"></div>
 <script>
 window.__LOG = [];
@@ -1955,6 +1969,33 @@ function hideAudioHint(){
 var CLOCK = { t: 0, last: 0, fps: 60, acc: 0, frames: 0, dpr: 1, quality: 2 };
 var SHELTER = { cur: 0 };
 
+// ---------- 横屏：全屏 + 方向锁定，锁不上就挡一屏 ----------
+function isPortrait(){
+  return window.innerHeight > window.innerWidth;
+}
+var STARTED = false;
+function updateRotateMask(){
+  var el = document.getElementById('rotate');
+  if (!el) return;
+  var p = isPortrait();
+  el.classList.toggle('on', p && STARTED);
+  if (!p){ try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch(e){} }
+}
+function goLandscape(){
+  var el = document.documentElement;
+  var fs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if (fs){
+    try { var r = fs.call(el, { navigationUI: 'hide' }); if (r && r.catch) r.catch(function(){}); } catch(e){}
+  }
+  try {
+    if (screen.orientation && screen.orientation.lock){
+      var l = screen.orientation.lock('landscape');
+      if (l && l.catch) l.catch(function(){});
+    }
+  } catch(e){}
+  setTimeout(function(){ onResize(); updateRotateMask(); }, 260);
+}
+
 // ---------- 摇杆 ----------
 function bindStick(){
   var base = document.getElementById('stick');
@@ -2209,7 +2250,9 @@ function boot(){
     try { window.matchMedia('(pagehide)'); } catch(e){}
   }
   window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ onResize(); updateRotateMask(); }, 300); });
   onResize();
+  updateRotateMask();
 
   // 先渲染一帧，让开始界面背后就有画面
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
@@ -2222,6 +2265,9 @@ function boot(){
 
   document.getElementById('btnStart').onclick = function(){
     document.getElementById('start').classList.add('hide');
+    STARTED = true;
+    goLandscape();                       // 全屏 + 锁定横屏
+    updateRotateMask();
     initAudio();
     CLOCK.last = performance.now();
     requestAnimationFrame(frame);
