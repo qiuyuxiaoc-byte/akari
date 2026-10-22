@@ -1734,7 +1734,8 @@ function buildShop(){
       var vr = new THREE.Mesh(new THREE.BoxGeometry(0.055, 2.42, 0.10), doorFrameMat);
       vr.position.set(dir * (sv ? 0.72 : -0.04), y0 + 1.24, 0); pg.add(vr);
     }
-    pg.position.set(0, 0, SH.Z1);
+    pg.position.set((SH.DX0 + SH.DX1) / 2, 0, SH.Z1);   // 门要摆在自己店门口
+    pg.userData.baseX = (SH.DX0 + SH.DX1) / 2;
     pg.userData.dir = dir;
     pg.userData.glass = gm;
     doorG.add(pg);
@@ -3530,7 +3531,7 @@ function updateDoor(dt){
   if (SHOP.openAmt < 0.002) SHOP.openAmt = 0;
   for (var j = 0; j < SHOP.doorPanes.length; j++){
     var q = SHOP.doorPanes[j];
-    q.position.x = q.userData.dir * SHOP.openAmt * 0.66;
+    q.position.x = (q.userData.baseX || 0) + q.userData.dir * SHOP.openAmt * 0.66;
     if (q.userData.glass) q.userData.glass.visible = SHOP.openAmt < 0.985;
   }
   var opening2 = SHOP.openAmt > 0.5;
