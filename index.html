@@ -11,32 +11,31 @@
   body{font-family:-apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif;color:#eaf0f8;
        touch-action:none;user-select:none;-webkit-user-select:none}
   /* ---------- 液态玻璃（Liquid Glass） ---------- */
-  .lg{position:relative;border:0;color:#eef5ff;
-      background:linear-gradient(150deg,rgba(255,255,255,.20) 0%,rgba(255,255,255,.075) 36%,
-                 rgba(255,255,255,.05) 64%,rgba(255,255,255,.15) 100%);
-      -webkit-backdrop-filter:blur(16px) saturate(185%) brightness(1.14);
-      backdrop-filter:blur(16px) saturate(185%) brightness(1.14);
+  .lg{position:relative;border:0;color:#16202c;
+      background:linear-gradient(160deg,rgba(255,255,255,.74) 0%,rgba(255,255,255,.54) 34%,
+                 rgba(255,255,255,.44) 62%,rgba(255,255,255,.62) 100%);
+      -webkit-backdrop-filter:blur(22px) saturate(190%) brightness(1.45);
+      backdrop-filter:blur(22px) saturate(190%) brightness(1.45);
       box-shadow:
-        0 0 0 1px rgba(255,255,255,.20),
-        inset 0 1.5px 2px rgba(255,255,255,.85),
-        inset 0 -1px 1.5px rgba(255,255,255,.18),
-        inset 0 0 30px rgba(255,255,255,.07),
-        inset 0 0 0 1px rgba(255,255,255,.06),
-        0 10px 26px rgba(0,0,0,.36),
-        0 2px 7px rgba(0,0,0,.22);
+        0 0 0 1px rgba(255,255,255,.55),
+        inset 0 1.5px 2px rgba(255,255,255,.95),
+        inset 0 -1.5px 2px rgba(255,255,255,.55),
+        inset 0 0 34px rgba(255,255,255,.30),
+        0 10px 28px rgba(0,0,0,.30),
+        0 0 34px rgba(255,255,255,.10);
       transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s,background .2s}
   .lg::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-      background:radial-gradient(120% 95% at var(--gx,50%) var(--gy,-14%),
-                 rgba(255,255,255,.72),rgba(255,255,255,.06) 50%,transparent 66%);
-      mix-blend-mode:screen;opacity:.95;transition:background .25s linear}
+      background:radial-gradient(115% 85% at var(--gx,50%) var(--gy,-16%),
+                 rgba(255,255,255,.95),rgba(255,255,255,.18) 46%,transparent 64%);
+      mix-blend-mode:screen;opacity:.85;transition:background .25s linear}
   .lg::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.10)}
-  .lg:active{transform:scale(.955);
-      box-shadow:0 0 0 1px rgba(255,255,255,.26),
-        inset 0 1px 2px rgba(255,255,255,.85),
-        inset 0 -1px 2px rgba(255,255,255,.12),
-        inset 0 0 30px rgba(255,255,255,.16),
-        0 4px 12px rgba(0,0,0,.34)}
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+  .lg:active{transform:scale(.952);
+      box-shadow:0 0 0 1px rgba(255,255,255,.7),
+        inset 0 2px 3px rgba(255,255,255,1),
+        inset 0 -1px 2px rgba(255,255,255,.5),
+        inset 0 0 40px rgba(255,255,255,.45),
+        0 4px 12px rgba(0,0,0,.28)}
   #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
   #vig{position:fixed;inset:0;pointer-events:none;z-index:2;
        background:radial-gradient(ellipse at 50% 48%,rgba(0,0,0,0) 42%,rgba(0,0,0,.55) 100%)}
@@ -47,21 +46,23 @@
   #stick{position:fixed;left:22px;bottom:26px;width:130px;height:130px;z-index:6;
          border-radius:50%;opacity:.9;transition:opacity .2s,transform .2s}
   #stick.on{opacity:1}
-  #knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;
+  #knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;
         border-radius:50%;
         background:
-          radial-gradient(circle at var(--kx,34%) var(--ky,30%),rgba(255,255,255,.92),rgba(255,255,255,.42) 34%,rgba(196,214,238,.22) 62%,rgba(255,255,255,.40) 100%);
+          radial-gradient(circle at var(--kx,34%) var(--ky,28%),#ffffff 0%,rgba(255,255,255,.92) 24%,
+            rgba(232,240,250,.72) 56%,rgba(255,255,255,.92) 100%);
         box-shadow:
-          inset 0 1px 1px rgba(255,255,255,.95),
-          inset 0 -2px 3px rgba(120,150,190,.35),
-          inset 0 0 14px rgba(255,255,255,.28),
-          0 4px 12px rgba(0,0,0,.45),
-          0 0 0 1px rgba(255,255,255,.35);
+          inset 0 1px 2px rgba(255,255,255,1),
+          inset 0 -3px 5px rgba(140,165,200,.35),
+          inset 0 0 16px rgba(255,255,255,.55),
+          0 6px 16px rgba(0,0,0,.35),
+          0 0 0 1px rgba(255,255,255,.75);
         transition:transform .06s linear}
   #btns{position:fixed;right:18px;bottom:30px;z-index:6;display:flex;flex-direction:column;gap:10px}
   #btns button{width:64px;height:64px;border-radius:50%;font-size:13px;letter-spacing:.06em;
-        font-family:inherit;color:#eaf2ff;text-shadow:0 1px 2px rgba(0,0,0,.45)}
-  #btns button.off{color:rgba(200,214,230,.55)}
+        font-family:inherit;color:#1b2734;font-weight:600;
+        text-shadow:0 1px 0 rgba(255,255,255,.7)}
+  #btns button.off{color:rgba(70,86,104,.55)}
   #start{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;
          align-items:center;justify-content:center;gap:12px;text-align:center;
          background:radial-gradient(ellipse at 50% 60%,rgba(6,10,18,.72),rgba(3,5,9,.94));
@@ -72,21 +73,21 @@
   #start .sub{font-size:13px;letter-spacing:.34em;color:#8fb8e0;margin-bottom:6px}
   #start .hint{font-size:12.5px;line-height:2;color:rgba(200,216,236,.62);margin-top:10px}
   #btnStart{display:none;margin-top:18px;padding:15px 46px;border-radius:999px;font-size:15px;
-            letter-spacing:.2em;text-indent:.2em;font-family:inherit;color:#fff8ea;
-            text-shadow:0 1px 3px rgba(60,30,0,.45);
-            background:linear-gradient(150deg,rgba(255,226,182,.34) 0%,rgba(255,206,150,.16) 38%,
-                        rgba(255,255,255,.06) 66%,rgba(255,225,180,.24) 100%);
-            -webkit-backdrop-filter:blur(14px) saturate(180%) brightness(1.12);
-            backdrop-filter:blur(14px) saturate(180%) brightness(1.12);
-            box-shadow:0 0 0 1px rgba(255,232,196,.34),
-              inset 0 1px 1.5px rgba(255,255,255,.85),
-              inset 0 -1px 1.5px rgba(255,235,205,.22),
-              inset 0 0 26px rgba(255,222,170,.16),
-              0 12px 30px rgba(0,0,0,.4),
-              0 0 26px rgba(255,206,140,.18)}
+            letter-spacing:.2em;text-indent:.2em;font-family:inherit;color:#18232e;font-weight:600;
+            text-shadow:0 1px 0 rgba(255,255,255,.75);
+            background:linear-gradient(160deg,rgba(255,255,255,.80) 0%,rgba(255,255,255,.58) 40%,
+                        rgba(255,255,255,.50) 66%,rgba(255,255,255,.70) 100%);
+            -webkit-backdrop-filter:blur(22px) saturate(190%) brightness(1.5);
+            backdrop-filter:blur(22px) saturate(190%) brightness(1.5);
+            box-shadow:0 0 0 1px rgba(255,255,255,.6),
+              inset 0 1.5px 2px rgba(255,255,255,.98),
+              inset 0 -1.5px 2px rgba(255,255,255,.6),
+              inset 0 0 34px rgba(255,255,255,.35),
+              0 12px 30px rgba(0,0,0,.35),
+              0 0 40px rgba(255,255,255,.12)}
   #loading{font-size:12.5px;color:rgba(190,210,235,.55);letter-spacing:.2em;margin-top:16px}
   #tip{position:fixed;left:50%;bottom:178px;transform:translateX(-50%);z-index:6;
-       font-size:12.5px;letter-spacing:.1em;color:rgba(238,246,255,.88);
+       font-size:12.5px;letter-spacing:.06em;color:#1b2734;font-weight:500;
        padding:9px 18px;border-radius:999px;
        opacity:0;transition:opacity 1.2s;pointer-events:none;white-space:normal;
        max-width:86vw;text-align:center;line-height:1.5}
@@ -642,7 +643,57 @@ function texLiquor(){
   var t = new THREE.CanvasTexture(c);
   t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
   TEX.liquor = t;
+  // 给 LIQDEF 补上图集格子，顺序与 defs 一致
+  if (typeof LIQDEF !== 'undefined'){
+    for (var q = 0; q < LIQDEF.length && q < LIQ.list.length; q++) LIQDEF[q].cell = LIQ.list[q].cell;
+  }
 }
+
+
+// 酒瓶几何参数（颜色取自图集定义）
+var LIQDEF = [
+  { name:'茅台', glass:0xf2efe4, cap:0xc9a227, label:'#b3261e', fg:'#f7e6a8', h:0.32, r:0.040 },
+  { name:'五粮液', glass:0xe4ecf2, cap:0xd8d8d8, label:'#c02a24', fg:'#ffffff', h:0.31, r:0.038 },
+  { name:'泸州', glass:0xb7292b, cap:0xe0c070, label:'#f0d79a', fg:'#8b1a12', h:0.30, r:0.040 },
+  { name:'汾酒', glass:0xdfe9f2, cap:0x1f5fa8, label:'#1f5fa8', fg:'#ffffff', h:0.30, r:0.037 },
+  { name:'洋河', glass:0x1f4f9c, cap:0xc9a227, label:'#1f4f9c', fg:'#f7e6a8', h:0.31, r:0.041 },
+  { name:'剑南春', glass:0xe8dfc8, cap:0xb3261e, label:'#c02a24', fg:'#f7e6a8', h:0.30, r:0.038 },
+  { name:'牛栏山', glass:0x2f6b3a, cap:0xd8c27a, label:'#e8e2cf', fg:'#2f6b3a', h:0.29, r:0.039 },
+  { name:'江小白', glass:0xf2f4f6, cap:0x3f8fd0, label:'#ffffff', fg:'#2a5a8a', h:0.26, r:0.034 },
+  { name:'青岛', glass:0x1f6b45, cap:0xc9a227, label:'#f2e4c0', fg:'#1f5b33', h:0.27, r:0.033 },
+  { name:'崂山', glass:0x1b5f9c, cap:0xd8d8d8, label:'#f2f6fa', fg:'#1b5f9c', h:0.27, r:0.033 },
+  { name:'雪花', glass:0xdce8f2, cap:0x1f6fd0, label:'#1f6fd0', fg:'#ffffff', h:0.26, r:0.032 },
+  { name:'燕京', glass:0x2b6b3f, cap:0xb3261e, label:'#f0d79a', fg:'#8b1a12', h:0.27, r:0.033 }
+];
+
+
+// 环绕圆柱用的标签条：一格 = 一个品牌，文字重复两次
+function texLiqLabels(){
+  var CW = 192, CH = 64, N = 12;
+  var c = mkCanvas(CW * N, CH), x = c.getContext('2d');
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  for (var i = 0; i < N; i++){
+    var d = LIQDEF[i];
+    var px = i * CW;
+    x.fillStyle = d.label; x.fillRect(px, 0, CW, CH);
+    x.fillStyle = 'rgba(0,0,0,.28)';
+    x.fillRect(px, 0, CW, 4); x.fillRect(px, CH - 4, CW, 4);
+    x.fillStyle = d.fg;
+    for (var r = 0; r < 2; r++){
+      x.font = 'bold 30px "Noto Sans CJK JP",sans-serif';
+      x.fillText(d.name, px + CW * (0.25 + r * 0.5), CH * 0.42);
+      x.font = 'bold 13px sans-serif';
+      x.globalAlpha = 0.85;
+      x.fillText(d.name.length > 2 ? 'BAIJIU' : 'BEER', px + CW * (0.25 + r * 0.5), CH * 0.72);
+      x.globalAlpha = 1;
+    }
+  }
+  var t = new THREE.CanvasTexture(c);
+  t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+  TEX.liqLabel = t;
+  LIQLBL.cols = N; LIQLBL.rows = 1;
+}
+var LIQLBL = { cols: 12, rows: 1 };
 // ===== p2 核心：渲染器 / 天空 / 灯光 / 地面 / 碰撞体 =====
 var canvas = document.getElementById('c');
 var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, powerPreference: 'high-performance' });
@@ -1128,6 +1179,73 @@ function batchBillboard(items, AT){
   g.computeBoundingSphere();
   return g;
 }
+
+// ---- 圆柱体酒瓶批处理：瓶身(顶点色) + 环绕标签(贴图) ----
+function batchBottles(items, AT){
+  var GP = [], GN = [], GC = [], GI = [];
+  var LP = [], LN = [], LC = [], LI = [], LU = [];
+  var C = new THREE.Color(), C2 = new THREE.Color();
+  var cw = 1 / AT.cols, ch = 1 / AT.rows;
+
+  function cyl(P, N, Cl, I, cx, cz, y0, y1, r0, r1, seg, cc){
+    var base = P.length / 3;
+    for (var i = 0; i <= seg; i++){
+      var a = i / seg * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+      P.push(cx + ca * r0, y0, cz + sa * r0); N.push(ca, 0, sa); Cl.push(cc.r, cc.g, cc.b);
+      P.push(cx + ca * r1, y1, cz + sa * r1); N.push(ca, 0, sa); Cl.push(cc.r, cc.g, cc.b);
+    }
+    for (var j = 0; j < seg; j++){
+      var b = base + j * 2;
+      I.push(b, b + 1, b + 3, b, b + 3, b + 2);
+    }
+  }
+
+  for (var k = 0; k < items.length; k++){
+    var it = items[k];
+    var h = it.h, x = it.x, y = it.y, z = it.z;
+    var rBody = it.r || 0.038;
+    var hBody = h * 0.60, hShoulder = h * 0.13, hNeck = h * 0.18, hCap = h * 0.09;
+    var rNeck = rBody * 0.36, rCap = rBody * 0.46;
+    C.set(it.glass); C2.set(it.cap);
+    // 瓶身
+    cyl(GP, GN, GC, GI, x, z, y, y + hBody, rBody, rBody, 12, C);
+    // 肩
+    cyl(GP, GN, GC, GI, x, z, y + hBody, y + hBody + hShoulder, rBody, rNeck, 12, C);
+    // 颈
+    cyl(GP, GN, GC, GI, x, z, y + hBody + hShoulder, y + hBody + hShoulder + hNeck, rNeck, rNeck, 8, C);
+    // 盖
+    cyl(GP, GN, GC, GI, x, z, y + hBody + hShoulder + hNeck, y + hBody + hShoulder + hNeck + hCap, rCap, rCap, 8, C2);
+
+    // 环绕标签：整格绕一圈（文字重复两次，正面一定读得到）
+    var lc = it.labelCell;
+    var lu0 = lc / LIQLBL.cols, luw = 1 / LIQLBL.cols;
+    var rr = rBody + 0.0018, seg = 18;
+    var yA = y + hBody * 0.32, yB = yA + h * 0.22;
+    var base2 = LP.length / 3;
+    for (var i2 = 0; i2 <= seg; i2++){
+      var a2 = i2 / seg * Math.PI * 2, ca2 = Math.cos(a2), sa2 = Math.sin(a2);
+      var uu = lu0 + luw * (i2 / seg);
+      LP.push(x + ca2 * rr, yA, z + sa2 * rr); LN.push(ca2, 0, sa2); LC.push(1, 1, 1); LU.push(uu, 0);
+      LP.push(x + ca2 * rr, yB, z + sa2 * rr); LN.push(ca2, 0, sa2); LC.push(1, 1, 1); LU.push(uu, 1);
+    }
+    for (var j2 = 0; j2 < seg; j2++){
+      var b2 = base2 + j2 * 2;
+      LI.push(b2, b2 + 1, b2 + 3, b2, b2 + 3, b2 + 2);
+    }
+  }
+
+  function pack(P, N, Cc, I, U){
+    var g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P), 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N), 3));
+    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(Cc), 3));
+    if (U) g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(U), 2));
+    g.setIndex(new THREE.BufferAttribute(new Uint16Array(I), 1));
+    g.computeBoundingSphere();
+    return g;
+  }
+  return { glass: pack(GP, GN, GC, GI), labels: pack(LP, LN, LC, LI, LU) };
+}
 // ===== p4 店内：冷柜 / 货架 / 收银台 / 店员 / 顶灯 =====
 var INTERIOR = {};
 
@@ -1536,7 +1654,7 @@ function buildShop(){
       var brand = TOB.list[(idx0 + ((c2 / 2.2) | 0)) % TOB.list.length];
       cigs.push({
         x: caseX0 + 0.30 + c2 * (spanX / (cols - 1)),
-        y: y0 + rowsY[r2],
+        y: y0 + rowsY[r2] + 0.1175,
         z: caseZ + 0.22,
         w: 0.175, h: 0.235, d: 0.05,
         cell: brand.cell, c: 0xf2f2f2, j: 0.04
@@ -1562,10 +1680,10 @@ function buildShop(){
       var n = Math.max(3, Math.floor(Math.abs(zTo - zFrom) / 0.5));
       for (var b = 0; b < n; b++){
         var bz = Math.min(zFrom, zTo) + 0.28 + b * ((Math.abs(zTo - zFrom) - 0.5) / Math.max(1, n - 1));
-        var it = LIQ.list[(b + lv * 3) % LIQ.list.length];
+        var li = (b + lv * 3) % LIQDEF.length; var it = LIQDEF[li];
         bottles.push({
-          x: xWall + faceDir * 0.02, y: y0 + levels[lv] + 0.02, z: bz,
-          w: 0.2, h: 0.32, cell: it.cell, c: 0xffffff, j: 0.04
+          x: xWall + faceDir * 0.16, y: y0 + levels[lv] + 0.03, z: bz,
+          h: it.h, r: it.r, glass: it.glass, cap: it.cap, labelCell: li
         });
       }
     }
@@ -1576,20 +1694,24 @@ function buildShop(){
   addCol(SH.X1 - 0.62, SH.X1, -11.95, -8.95, 'shopShelfR');
   var boardMesh = new THREE.Mesh(batchBoxes(boards), new THREE.MeshLambertMaterial({ vertexColors: true }));
   boardMesh.castShadow = true; scene.add(boardMesh);
-  var bottleMesh = new THREE.Mesh(batchBillboard(bottles, LIQ_ATLAS),
-    new THREE.MeshLambertMaterial({ map: TEX.liquor, transparent: true, alphaTest: 0.45, side: THREE.DoubleSide, vertexColors: true }));
-  scene.add(bottleMesh);
+  var bgeo = batchBottles(bottles, LIQ_ATLAS);
+  var glassMesh = new THREE.Mesh(bgeo.glass,
+    new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.28, metalness: 0.25, side: THREE.DoubleSide }));
+  glassMesh.castShadow = true; scene.add(glassMesh);
+  var labelMesh = new THREE.Mesh(bgeo.labels,
+    new THREE.MeshLambertMaterial({ map: TEX.liqLabel, vertexColors: true, side: THREE.DoubleSide }));
+  scene.add(labelMesh);
 
   // 地上的啤酒箱
   var crates = [];
+  var crateCols = [0x2f6b3a, 0x1f5f9c, 0x2b6b3f, 0xb3261e];
   for (var ci = 0; ci < 4; ci++){
     crates.push({
-      x: SH.X1 - 0.55 - (ci % 2) * 0.02, y: y0 + 0.115 + Math.floor(ci / 2) * 0.23, z: -9.25 - (ci % 2) * 0.42,
-      w: 0.36, h: 0.22, d: 0.34, cell: LIQ.list[8 + ci].cell, c: 0xe8e2d4, j: 0.05
+      x: SH.X1 - 0.55, y: y0 + 0.11 + Math.floor(ci / 2) * 0.22, z: -9.25 - (ci % 2) * 0.40,
+      w: 0.36, h: 0.21, d: 0.34, c: crateCols[ci], j: 0.05
     });
   }
-  var crateMesh = new THREE.Mesh(batchLabeled(crates, LIQ_ATLAS),
-    new THREE.MeshLambertMaterial({ map: TEX.liquor, vertexColors: true }));
+  var crateMesh = new THREE.Mesh(batchBoxes(crates), new THREE.MeshLambertMaterial({ vertexColors: true }));
   crateMesh.castShadow = true; scene.add(crateMesh);
 
   // ---- 收银台 ----
@@ -1607,7 +1729,7 @@ function buildShop(){
   var topCigs = [];
   for (var tc = 0; tc < 6; tc++){
     var br = TOB.list[tc % TOB.list.length];
-    topCigs.push({ x: 11.85 + (tc % 3) * 0.22, y: y0 + 1.0, z: -7.2 - ((tc / 3) | 0) * 0.3,
+    topCigs.push({ x: 11.85 + (tc % 3) * 0.22, y: y0 + 1.08, z: -7.2 - ((tc / 3) | 0) * 0.3,
       w: 0.12, h: 0.16, d: 0.05, cell: br.cell, c: 0xf2f2f2, j: 0.03 });
   }
   scene.add(new THREE.Mesh(batchLabeled(topCigs, TOB_ATLAS),
@@ -2810,6 +2932,7 @@ function boot(){
   texSnackAtlas();
   texTobacco();
   texLiquor();
+  texLiqLabels();
   buildSky();
   buildLights();
   buildGround();
