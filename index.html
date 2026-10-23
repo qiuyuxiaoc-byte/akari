@@ -88,7 +88,7 @@
   #setPanel{position:fixed;right:16px;top:100px;z-index:11;display:none;flex-direction:column;
        width:min(268px,74vw);border-radius:22px;padding:14px 14px 10px}
   #setPanel.on{display:flex}
-  #setClose{position:absolute;top:-11px;right:-11px;width:34px;height:34px;border-radius:50%;padding:0;z-index:12}
+  #setClose{position:absolute;top:-11px;left:-11px;width:34px;height:34px;border-radius:50%;padding:0;z-index:12}
   #setClose svg{width:17px;height:17px}
   .setTitle{font-size:12px;letter-spacing:.24em;color:rgba(226,238,252,.6);padding:0 2px 10px;
        border-bottom:1px solid rgba(255,255,255,.14);margin-bottom:6px}
@@ -241,7 +241,7 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10231821</div>
+  <div id="ver">v10231844</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -259,7 +259,7 @@
   </button>
   <div class="setTitle">设置</div>
 
-  <div class="setRow">
+  <div class="setRow" id="rowGyro">
     <button id="gyroChk" class="chk" aria-label="陀螺仪开关"></button>
     <span id="gyroName" class="setName">陀螺仪</span>
     <span id="gyroVal" class="setVal">1.5×</span>
@@ -3642,7 +3642,10 @@ function syncGyroBtn(){
   var on = VIEWMODE.isDesktop ? (document.pointerLockElement === canvas) : VIEWMODE.gyro;
   chk.classList.toggle('on', !!on);
   var val = document.getElementById('gyroVal');
-  if (val) val.textContent = GYRO.sens > 0 ? GYRO.sens.toFixed(1) + '×' : '关';
+  if (val){
+    if (VIEWMODE.isDesktop) val.textContent = (document.pointerLockElement === canvas) ? '鼠标锁定' : '自由鼠标';
+    else val.textContent = GYRO.sens > 0 ? GYRO.sens.toFixed(1) + '×' : '关';
+  }
 }
 
 function enableGyro(){
@@ -4056,6 +4059,7 @@ function boot(){
   // 陀螺仪勾选框
   chk.addEventListener('pointerdown', function(e){
     e.stopPropagation();
+    if (VIEWMODE.isDesktop){ toggleViewMode(); setTimeout(syncGyroBtn, 140); return; }
     if (VIEWMODE.gyro){ VIEWMODE.gyro = false; syncGyroBtn(); }
     else {
       if (GYRO.sens <= 0){ GYRO.sens = 1.5; sensRange.value = 50; syncSens(); }
@@ -4081,6 +4085,13 @@ function boot(){
     var sv0 = localStorage.getItem('akari_gyroSens');
     if (sv0 !== null){ sensRange.value = sv0; syncSens(); }
   } catch(err){}
+  // 手机端不需要陀螺仪：整块隐藏；桌面端保留（勾选框 = 鼠标锁定）
+  if (!VIEWMODE.isDesktop){
+    VIEWMODE.gyro = false;
+    var rg = document.getElementById('rowGyro');
+    if (rg) rg.style.display = 'none';
+    if (sensBox) sensBox.style.display = 'none';
+  }
   syncGyroBtn();
 
   window.__G = {
