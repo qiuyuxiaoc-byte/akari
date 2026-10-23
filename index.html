@@ -64,6 +64,8 @@
   #hud{position:fixed;top:14px;left:16px;z-index:5;pointer-events:none;
        font-size:12px;letter-spacing:.08em;color:rgba(226,236,248,.6);line-height:1.7}
   #hud .big{font-size:15px;color:rgba(240,246,255,.9);font-variant-numeric:tabular-nums}
+  #wallet{font-size:15px;letter-spacing:.06em;color:#ffd89a;font-variant-numeric:tabular-nums;
+       margin-bottom:2px;text-shadow:0 0 12px rgba(255,190,110,.35)}
   #ver{font-size:10px;color:rgba(190,210,235,.28);letter-spacing:.05em}
   #fps{font-size:11px;color:rgba(200,215,235,.35)}
   #stick{position:fixed;left:54px;bottom:26px;width:130px;height:130px;z-index:6;
@@ -167,6 +169,23 @@
        padding:0;z-index:10}
   #bagClose svg{width:23px;height:23px}
   .bagHead #bagSum{font-size:15px;font-weight:600;color:#fff}
+  #packPanel{position:fixed;left:16px;top:100px;z-index:9;display:none;flex-direction:column;
+       width:min(300px,72vw);height:max(210px,calc(100vh - 280px));border-radius:24px;padding:12px 12px 8px}
+  #packPanel.on{display:flex}
+  #packClose{position:absolute;top:-11px;right:-11px;width:34px;height:34px;border-radius:50%;padding:0;z-index:10}
+  #packClose svg{width:17px;height:17px}
+  #packList{overflow:hidden;padding:8px 4px;flex:1;min-height:0;
+       display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:86px;gap:8px;align-content:start}
+  #payTip{position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:7;
+       display:none;align-items:center;gap:12px;padding:9px 12px 9px 20px;border-radius:999px;
+       font-size:13px;max-width:80vw}
+  #payTip.on{display:flex}
+  #payTip #payName{color:rgba(226,238,252,.72);white-space:nowrap}
+  #payTip #paySum{color:#ffd89a;font-weight:600;font-variant-numeric:tabular-nums}
+  #payGo{width:64px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;
+       background:linear-gradient(160deg,rgba(255,226,180,.55),rgba(255,200,140,.28));
+       box-shadow:inset 0 1px 1px rgba(255,255,255,.95),0 4px 10px rgba(0,0,0,.3);
+       font-size:13px;color:#3a2a18;font-weight:600}
   #bagList{overflow:hidden;padding:8px 4px;flex:1;min-height:0;
        touch-action:none;overscroll-behavior:contain;
        display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:86px;gap:8px;align-content:start}
@@ -241,7 +260,8 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10231844</div>
+  <div id="wallet">¥200</div>
+  <div id="ver">v10231853</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -283,6 +303,14 @@
   </div>
 </div>
 <div id="btns">
+  <button id="btnPack" class="lg iconBtn" aria-label="背包">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6.3 8.6a5.7 5.7 0 0 1 11.4 0v8.9a2.2 2.2 0 0 1-2.2 2.2H8.5a2.2 2.2 0 0 1-2.2-2.2z"/>
+      <path d="M8.7 8.6V7.2a3.3 3.3 0 0 1 6.6 0v1.4"/>
+      <path d="M9.6 12.4h4.8M9.6 15.8h4.8"/>
+    </svg>
+    <span id="packCount">0</span>
+  </button>
   <button id="btnBag" class="lg iconBtn" aria-label="购物篮">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 4.2h2.1l2.3 10.1a2 2 0 0 0 2 1.55h7.1a2 2 0 0 0 2-1.6L20 7.2H6.1"/>
@@ -290,6 +318,21 @@
     </svg>
     <span id="bagCount">0</span>
   </button>
+</div>
+<div id="packPanel" class="lg panel">
+  <button id="packClose" class="lg iconBtn" aria-label="关闭背包">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>
+    </svg>
+  </button>
+  <div class="bagHead"><span class="title" id="packTitle">背包 0</span><span id="packValue">¥0</span></div>
+  <div id="packList"></div>
+  <div class="bagPager"><button id="packPrev" class="lg">‹</button><span id="packPageNo">1/1</span><button id="packNext" class="lg">›</button></div>
+</div>
+<div id="payTip" class="lg">
+  <span id="payName">收银台</span>
+  <span id="paySum">¥0</span>
+  <span id="payGo">付款</span>
 </div>
 <div id="pickTip" class="lg"><span id="pickName">—</span><span id="pickGo">拿</span></div>
 <div id="bagPanel" class="lg panel">
@@ -2867,6 +2910,38 @@ AUD.step = function(surface, power, side){
   }
 };
 
+// 收银机：叮——哒（扫描 + 落钱）
+AUD.pay = function(){
+  if (!AUD.ready || AUD.muted) return;
+  var ctx = AUD.ctx, t = ctx.currentTime + 0.02;
+  [[1400, 0.10, 0.0], [2100, 0.07, 0.10], [980, 0.09, 0.30]].forEach(function(n){
+    var o = ctx.createOscillator(); o.type = 'square';
+    o.frequency.value = n[0];
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t + n[2]);
+    g.gain.linearRampToValueAtTime(n[1], t + n[2] + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + n[2] + 0.13);
+    var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 3200;
+    o.connect(f); f.connect(g); g.connect(AUD.sfx);
+    o.start(t + n[2]); o.stop(t + n[2] + 0.15);
+  });
+};
+
+// 钱不够：短促的下行两声
+AUD.deny = function(){
+  if (!AUD.ready || AUD.muted) return;
+  var ctx = AUD.ctx, t = ctx.currentTime + 0.02;
+  [330, 240].forEach(function(hz, i){
+    var o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = hz;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t + i * 0.13);
+    g.gain.linearRampToValueAtTime(0.12, t + i * 0.13 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.13 + 0.12);
+    o.connect(g); g.connect(AUD.sfx);
+    o.start(t + i * 0.13); o.stop(t + i * 0.13 + 0.14);
+  });
+};
+
 // 拿起商品：一声轻脆的「哒」
 AUD.pick = function(){
   if (!AUD.ready || AUD.muted) return;
@@ -3293,9 +3368,11 @@ function bindSlot(slot){
 }
 
 // ---------------- 详情 ----------------
-function showDetail(b){
+function showDetail(b, fromPack){
   if (!b) return;
   PICK.detailItem = b;
+  var putBtn = document.getElementById('dPut');
+  if (putBtn) putBtn.style.display = fromPack ? 'none' : '';
   document.getElementById('dIcon').style.cssText = itemIcon(b.cell, b.tex, b.cols, b.rows);
   document.getElementById('dName').textContent = b.name;
   document.getElementById('dPrice').textContent = '¥' + (b.price % 1 === 0 ? b.price : b.price.toFixed(1)) +
@@ -3304,6 +3381,7 @@ function showDetail(b){
   document.getElementById('dTag').textContent = info ? info.t : '';
   document.getElementById('dDesc').textContent = info ? info.d : (KIND_DESC[b.kind] || '');
   PICK.bagEl.classList.remove('on');
+  var pp = document.getElementById('packPanel'); if (pp) pp.classList.remove('on');
   PICK.detail.classList.add('on');
 }
 
@@ -3460,6 +3538,137 @@ function updateHold(dt){
       HOLD.fly.splice(k, 1);
     }
   }
+}
+// ===== p12 收款与背包 =====
+var WALLET = { money: 200 };
+var PACK = { items: [], page: 0, PER: 9 };
+var PAY = { near: null, points: [
+  { x: 3.0,  z: -10.4, r: 2.0, name: '便利店收银台' },
+  { x: 11.4, z: -7.8,  r: 2.0, name: '烟酒店收银台' }
+] };
+
+function money(v){ return '¥' + (Math.abs(v % 1) < 0.001 ? v : v.toFixed(1)); }
+
+function basketTotal(){
+  var t = 0;
+  for (var i = 0; i < PICK.bag.length; i++) t += PICK.bag[i].price;
+  return Math.round(t * 10) / 10;
+}
+
+function updateWallet(){
+  var el = document.getElementById('wallet');
+  if (el) el.textContent = money(WALLET.money);
+}
+
+// ---------- 结账 ----------
+function updatePay(dt){
+  var el = document.getElementById('payTip');
+  if (!el || !STARTED) return;
+  var pp = document.getElementById('packPanel');
+  var panelOpen = PICK.bagEl.classList.contains('on') || PICK.detail.classList.contains('on') ||
+                  (pp && pp.classList.contains('on'));
+  var near = null;
+  for (var i = 0; i < PAY.points.length; i++){
+    var p = PAY.points[i];
+    var dx = PLAYER.pos.x - p.x, dz = PLAYER.pos.z - p.z;
+    if (Math.sqrt(dx * dx + dz * dz) < p.r){ near = p; break; }
+  }
+  PAY.near = near;
+  var show = !!near && PICK.bag.length > 0 && !panelOpen;
+  el.classList.toggle('on', show);
+  if (show){
+    document.getElementById('payName').textContent = near.name;
+    document.getElementById('paySum').textContent = money(basketTotal());
+    PICK.tipEl.classList.remove('on');       // 结账时不显示拿取提示
+  }
+}
+
+function checkout(){
+  if (!PICK.bag.length){ toast('篮子是空的'); return; }
+  var total = basketTotal();
+  if (WALLET.money + 0.001 < total){
+    toast('钱不够，还差 ' + money(total - WALLET.money));
+    if (window.AUD && AUD.deny) AUD.deny();
+    return;
+  }
+  WALLET.money = Math.round((WALLET.money - total) * 10) / 10;
+  for (var i = 0; i < PICK.bag.length; i++){
+    PACK.items.push(PICK.bag[i]);
+  }
+  PICK.bag.length = 0;
+  PICK.page = 0;
+  if (typeof HOLD !== 'undefined' && HOLD.shown) rebuildBasketContents();
+  renderBag(); renderPack(); updateWallet();
+  if (window.AUD && AUD.pay) AUD.pay();
+  toast('已付款 ' + money(total) + ' · 商品放进背包了');
+}
+
+// ---------- 背包 ----------
+function renderPack(){
+  var list = document.getElementById('packList');
+  if (!list) return;
+  var pages = Math.max(1, Math.ceil(PACK.items.length / PACK.PER));
+  if (PACK.page > pages - 1) PACK.page = pages - 1;
+  if (PACK.page < 0) PACK.page = 0;
+  var from = PACK.page * PACK.PER, to = Math.min(PACK.items.length, from + PACK.PER);
+  var val = 0, html = '';
+  for (var i = 0; i < PACK.items.length; i++) val += PACK.items[i].price;
+  for (var k = from; k < to; k++){
+    var b = PACK.items[k];
+    html += '<div class="slot" data-i="' + k + '">' +
+            '<div class="ico" style="' + itemIcon(b.cell, b.tex, b.cols, b.rows) + '"></div>' +
+            '<div class="nm">' + b.name + '</div></div>';
+  }
+  if (!html) html = '<div class="bagHint" style="grid-column:1/-1">还没有买到东西<br>把篮子拎到收银台结账</div>';
+  list.innerHTML = html;
+  var cnt = document.getElementById('packCount');
+  if (cnt) cnt.textContent = PACK.items.length;
+  var t = document.getElementById('packTitle');
+  if (t) t.textContent = '背包 ' + PACK.items.length;
+  var v = document.getElementById('packValue');
+  if (v) v.textContent = money(val);
+  var pg = document.querySelector('#packPanel .bagPager');
+  if (pg){
+    pg.classList.toggle('on', pages > 1);
+    document.getElementById('packPageNo').textContent = (PACK.page + 1) + '/' + pages;
+    document.getElementById('packPrev').disabled = PACK.page <= 0;
+    document.getElementById('packNext').disabled = PACK.page >= pages - 1;
+  }
+  var slots = list.querySelectorAll('.slot');
+  for (var j = 0; j < slots.length; j++){
+    (function(s){
+      s.addEventListener('pointerdown', function(e){
+        e.stopPropagation();
+        showDetail(PACK.items[+s.getAttribute('data-i')], true);
+      });
+    })(slots[j]);
+  }
+}
+
+function initShopFlow(){
+  updateWallet();
+  renderPack();
+
+  document.getElementById('btnPack').addEventListener('pointerdown', function(e){
+    e.stopPropagation();
+    var p = document.getElementById('packPanel');
+    p.classList.toggle('on');
+    if (p.classList.contains('on')){ PICK.bagEl.classList.remove('on'); renderPack(); }
+  });
+  document.getElementById('packClose').addEventListener('pointerdown', function(e){
+    e.stopPropagation();
+    document.getElementById('packPanel').classList.remove('on');
+  });
+  document.getElementById('packPrev').addEventListener('pointerdown', function(e){
+    e.stopPropagation(); PACK.page--; renderPack();
+  });
+  document.getElementById('packNext').addEventListener('pointerdown', function(e){
+    e.stopPropagation(); PACK.page++; renderPack();
+  });
+  document.getElementById('payGo').addEventListener('pointerdown', function(e){
+    e.stopPropagation();
+    checkout();
+  });
 }
 // ===== p9 输入 / 主循环 / UI =====
 var INPUT = { jx: 0, jy: 0, run: false };
@@ -3822,6 +4031,7 @@ function stepFrame(now){
   updatePlayer(dt);
   updateDoor(dt);
   updatePick(dt);
+  updatePay(dt);
   updateHold(dt);
 
   // 雨与地面涟漪
@@ -3943,6 +4153,7 @@ function boot(){
   syncGyroBtn();
   pickInit();
   buildHold();
+  initShopFlow();
 
   // 液态玻璃：手机一倾斜，玻璃上的高光就跟着走
   try {
