@@ -83,6 +83,33 @@
           0 6px 16px rgba(0,0,0,.4),
           0 0 0 1px rgba(255,255,255,.55);
         transition:transform .06s linear}
+  #btnSet{position:fixed;right:16px;top:46px;z-index:8;width:46px;height:46px;border-radius:50%}
+  #btnSet svg{width:22px;height:22px}
+  #setPanel{position:fixed;right:16px;top:100px;z-index:11;display:none;flex-direction:column;
+       width:min(268px,74vw);border-radius:22px;padding:14px 14px 10px}
+  #setPanel.on{display:flex}
+  #setClose{position:absolute;top:-11px;right:-11px;width:34px;height:34px;border-radius:50%;padding:0;z-index:12}
+  #setClose svg{width:17px;height:17px}
+  .setTitle{font-size:12px;letter-spacing:.24em;color:rgba(226,238,252,.6);padding:0 2px 10px;
+       border-bottom:1px solid rgba(255,255,255,.14);margin-bottom:6px}
+  .setRow{display:flex;align-items:center;gap:10px;padding:11px 2px;font-size:13.5px;color:#eef5ff}
+  .setRow.tap:active{opacity:.7}
+  .setRow .setName{flex:1}
+  .setRow .setVal{font-size:12px;color:rgba(200,220,245,.7);letter-spacing:.04em}
+  .chk{width:22px;height:22px;border-radius:7px;padding:0;flex:0 0 auto;
+       border:1.5px solid rgba(255,255,255,.45);background:rgba(255,255,255,.10);
+       display:flex;align-items:center;justify-content:center;font-size:14px;color:#8ff0c0;line-height:1}
+  .chk.on{background:rgba(120,240,190,.20);border-color:rgba(140,255,200,.85);box-shadow:0 0 12px rgba(120,255,190,.35)}
+  .chk.on::after{content:'✓'}
+  .sensBox{display:none;padding:2px 2px 8px;border-bottom:1px solid rgba(255,255,255,.10)}
+  .sensBox.on{display:block}
+  .setRow.sub{padding:6px 0}
+  #sensRange{-webkit-appearance:none;width:100%;height:4px;border-radius:99px;
+       background:linear-gradient(90deg,rgba(255,255,255,.75),rgba(255,255,255,.22));outline:none;margin:6px 0}
+  #sensRange::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+       background:radial-gradient(circle at 36% 30%,#fff,rgba(226,240,255,.85));
+       box-shadow:0 2px 8px rgba(0,0,0,.45),inset 0 1px 1px #fff;border:1px solid rgba(255,255,255,.6)}
+  .sensHint{font-size:10.5px;color:rgba(200,220,245,.5);letter-spacing:.04em;margin-top:2px}
   #btns{position:fixed;right:18px;bottom:30px;z-index:6;display:flex;flex-direction:column;gap:10px}
   #btns button{width:64px;height:64px;border-radius:50%;font-size:13px;letter-spacing:.06em;
         font-family:inherit;color:#f2f7ff;font-weight:500;
@@ -214,10 +241,47 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10231805</div>
+  <div id="ver">v10231821</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
+<button id="btnSet" class="lg iconBtn" aria-label="设置">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3.1"/>
+    <path d="M19.4 15a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.6 1.6 0 0 0 15 19.4a1.6 1.6 0 0 0-1 1.47V21a2 2 0 1 1-4 0v-.09A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.6 1.6 0 0 0 4.6 15a1.6 1.6 0 0 0-1.47-1H3a2 2 0 1 1 0-4h.09A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.32-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.6 1.6 0 0 0 9 4.6a1.6 1.6 0 0 0 1-1.47V3a2 2 0 1 1 4 0v.09A1.6 1.6 0 0 0 15 4.6a1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.6 1.6 0 0 0 19.4 9v.09a1.6 1.6 0 0 0 1.47 1H21a2 2 0 1 1 0 4h-.09a1.6 1.6 0 0 0-1.51 1z"/>
+  </svg>
+</button>
+<div id="setPanel" class="lg panel">
+  <button id="setClose" class="lg iconBtn" aria-label="关闭设置">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>
+    </svg>
+  </button>
+  <div class="setTitle">设置</div>
+
+  <div class="setRow">
+    <button id="gyroChk" class="chk" aria-label="陀螺仪开关"></button>
+    <span id="gyroName" class="setName">陀螺仪</span>
+    <span id="gyroVal" class="setVal">1.5×</span>
+  </div>
+  <div id="sensBox" class="sensBox">
+    <div class="setRow sub">
+      <span class="setName">灵敏度</span>
+      <span id="sensVal" class="setVal">50</span>
+    </div>
+    <input id="sensRange" type="range" min="0" max="100" step="1" value="50">
+    <div class="sensHint">拖到 0 = 关闭陀螺仪</div>
+  </div>
+
+  <div class="setRow tap" id="rowSound">
+    <span class="setName">音效</span>
+    <span id="soundVal" class="setVal">开</span>
+  </div>
+  <div class="setRow tap" id="rowView">
+    <span class="setName">视角切换</span>
+    <span id="viewVal" class="setVal">第一人称</span>
+  </div>
+</div>
 <div id="btns">
   <button id="btnBag" class="lg iconBtn" aria-label="购物篮">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -225,26 +289,6 @@
       <circle cx="9.6" cy="19.6" r="1.35"/><circle cx="17.4" cy="19.6" r="1.35"/>
     </svg>
     <span id="bagCount">0</span>
-  </button>
-  <button id="btnView" class="lg iconBtn" aria-label="切换视角">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3.5 8.6A3.1 3.1 0 0 1 6.6 5.5h10.8a3.1 3.1 0 0 1 3.1 3.1v6.8a3.1 3.1 0 0 1-3.1 3.1H6.6a3.1 3.1 0 0 1-3.1-3.1z"/>
-      <circle cx="12" cy="12" r="2.7"/>
-      <path d="M9.6 2.6 7 5.5M14.4 2.6 17 5.5"/>
-    </svg>
-  </button>
-  <button id="btnGyro" class="lg iconBtn" aria-label="陀螺仪视角">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="7.4"/><circle cx="12" cy="12" r="2.1" fill="currentColor" stroke="none"/>
-      <path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2"/>
-    </svg>
-  </button>
-  <button id="btnSound" class="lg iconBtn" aria-label="音效开关">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 9.4h3.3L12 5.4v13.2L7.3 14.6H4z"/>
-      <g class="wv"><path d="M15.4 9.2a4.1 4.1 0 0 1 0 5.6"/><path d="M17.9 6.7a7.6 7.6 0 0 1 0 10.6"/></g>
-      <path class="slash" d="M15.6 9.4l4.4 5.2" stroke-width="1.9"/>
-    </svg>
   </button>
 </div>
 <div id="pickTip" class="lg"><span id="pickName">—</span><span id="pickGo">拿</span></div>
@@ -281,7 +325,7 @@
 <div id="start">
   <h1>雨夜便利店</h1>
   <div class="sub">あかりマート · 24H</div>
-  <div class="hint">手机：左下摇杆走动 · 拖动画面看四周 · 圆圈图标开陀螺仪<br>电脑：WASD 走 · 鼠标转视角 · 空格切换鼠标锁定 / C 切视角<br>推开玻璃门进去看看</div>
+  <div class="hint">手机：左下摇杆走动 · 拖动画面看四周<br>右上角齿轮里可开「陀螺仪」· 调灵敏度 · 音效 · 视角<br>推开玻璃门进去看看</div>
   <button id="btnStart">进 入 夜 色</button>
   <div id="loading">正在生成场景…</div>
 </div>
@@ -3590,12 +3634,28 @@ function detectDesktop(){
 }
 var VIEWMODE = { gyro: false, base: null, yaw0: 0, pitch0: 0, isDesktop: detectDesktop() };
 var GYRO_SIGN = { yaw: 1, pitch: 1 };
+var GYRO = { sens: 1.5 };          // 1.0 = 原始速度，滑杆 0~100 映射到 0~3.0
 
 function syncGyroBtn(){
-  var b = document.getElementById('btnGyro');
-  if (!b) return;
+  var chk = document.getElementById('gyroChk');
+  if (!chk) return;
   var on = VIEWMODE.isDesktop ? (document.pointerLockElement === canvas) : VIEWMODE.gyro;
-  b.classList.toggle('on', !!on);
+  chk.classList.toggle('on', !!on);
+  var val = document.getElementById('gyroVal');
+  if (val) val.textContent = GYRO.sens > 0 ? GYRO.sens.toFixed(1) + '×' : '关';
+}
+
+function enableGyro(){
+  var start = function(){
+    VIEWMODE.gyro = true;
+    VIEWMODE.base = null;            // 每次开启重新校准，避免跳一下
+    syncGyroBtn();
+  };
+  if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission){
+    DeviceOrientationEvent.requestPermission().then(function(st){
+      if (st === 'granted') start();
+    }).catch(function(){});
+  } else start();
 }
 
 function toggleViewMode(){
@@ -3608,21 +3668,8 @@ function toggleViewMode(){
     setTimeout(syncGyroBtn, 120);
     return;
   }
-  if (VIEWMODE.gyro){
-    VIEWMODE.gyro = false;
-  } else {
-    var start = function(){
-      VIEWMODE.gyro = true;
-      VIEWMODE.base = null;         // 每次开启都重新校准，避免跳一下
-      syncGyroBtn();
-    };
-    if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission){
-      DeviceOrientationEvent.requestPermission().then(function(st){
-        if (st === 'granted') start();
-      }).catch(function(){});
-    } else start();
-  }
-  syncGyroBtn();
+  if (VIEWMODE.gyro){ VIEWMODE.gyro = false; syncGyroBtn(); }
+  else enableGyro();
 }
 
 window.addEventListener('deviceorientation', function(e){
@@ -3962,26 +4009,79 @@ function boot(){
       setTimeout(function(){ tip.classList.remove('on'); }, 9000);
     }
   };
-  var btnView = document.getElementById('btnView');
-  btnView.onclick = null;
-  btnView.addEventListener('pointerdown', function(e){
+  // ---------------- 设置面板 ----------------
+  var setPanel = document.getElementById('setPanel');
+  var sensBox = document.getElementById('sensBox');
+  var sensRange = document.getElementById('sensRange');
+  var chk = document.getElementById('gyroChk');
+
+  document.getElementById('btnSet').addEventListener('pointerdown', function(e){
     e.stopPropagation();
-    toggleView();
+    setPanel.classList.toggle('on');
+    if (setPanel.classList.contains('on')) syncGyroBtn();
   });
-  var sbtn = document.getElementById('btnSound');
+  document.getElementById('setClose').addEventListener('pointerdown', function(e){
+    e.stopPropagation(); setPanel.classList.remove('on');
+  });
+
+  // 音效行
   try { if (localStorage.getItem('akari_mute') === '1') { AUD.toggleMute(); } } catch(err){}
-  function syncSoundBtn(){
-    sbtn.classList.toggle('off', !!AUD.muted);
+  function syncSoundRow(){
+    var el = document.getElementById('soundVal');
+    if (el) el.textContent = AUD.muted ? '关' : '开';
   }
-  syncSoundBtn();
-  sbtn.onclick = null;
-  sbtn.addEventListener('pointerdown', function(e){
+  syncSoundRow();
+  document.getElementById('rowSound').addEventListener('pointerdown', function(e){
     e.stopPropagation();
     AUD.toggleMute();
     try { localStorage.setItem('akari_mute', AUD.muted ? '1' : '0'); } catch(err){}
-    syncSoundBtn();
+    syncSoundRow();
     if (!AUD.muted) resumeAudio();
   });
+
+  // 视角行
+  function syncViewRow(){
+    var el = document.getElementById('viewVal');
+    if (el) el.textContent = PLAYER.mode === 'fp' ? '第一人称' : '第三人称';
+  var v2 = document.getElementById('viewVal');
+  if (v2) v2.textContent = PLAYER.mode === 'fp' ? '第一人称' : '第三人称';
+  }
+  syncViewRow();
+  document.getElementById('rowView').addEventListener('pointerdown', function(e){
+    e.stopPropagation();
+    toggleView();
+    syncViewRow();
+  });
+
+  // 陀螺仪勾选框
+  chk.addEventListener('pointerdown', function(e){
+    e.stopPropagation();
+    if (VIEWMODE.gyro){ VIEWMODE.gyro = false; syncGyroBtn(); }
+    else {
+      if (GYRO.sens <= 0){ GYRO.sens = 1.5; sensRange.value = 50; syncSens(); }
+      enableGyro();
+    }
+  });
+  // 点「陀螺仪」展开灵敏度
+  document.getElementById('gyroName').addEventListener('pointerdown', function(e){
+    e.stopPropagation();
+    sensBox.classList.toggle('on');
+  });
+  function syncSens(){
+    var v = +sensRange.value;
+    GYRO.sens = v / 100 * 3;
+    var sv = document.getElementById('sensVal');
+    if (sv) sv.textContent = v;
+    if (v === 0){ VIEWMODE.gyro = false; }
+    try { localStorage.setItem('akari_gyroSens', String(v)); } catch(err){}
+    syncGyroBtn();
+  }
+  sensRange.addEventListener('input', syncSens);
+  try {
+    var sv0 = localStorage.getItem('akari_gyroSens');
+    if (sv0 !== null){ sensRange.value = sv0; syncSens(); }
+  } catch(err){}
+  syncGyroBtn();
 
   window.__G = {
     PLAYER: PLAYER, ACTOR: ACTOR, STORE: STORE, SHOP: SHOP, PICK: PICK, HOLD: HOLD, FX: FX, AUD: AUD, scene: scene,
