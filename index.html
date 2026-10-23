@@ -261,7 +261,7 @@
   <div id="mode">第一人称</div>
   <div id="fps"></div>
   <div id="wallet">¥200</div>
-  <div id="ver">v10231853</div>
+  <div id="ver">v10232217</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -977,6 +977,7 @@ function groundY(x, z){
 }
 
 // ---------- 天空 ----------
+var SKY = null;
 function buildSky(){
   var geo = new THREE.SphereGeometry(105, 32, 20);
   var mat = new THREE.ShaderMaterial({
@@ -1009,6 +1010,7 @@ function buildSky(){
   var sky = new THREE.Mesh(geo, mat);
   sky.frustumCulled = false;
   scene.add(sky);
+  SKY = sky;
   return sky;
 }
 
@@ -1062,7 +1064,7 @@ var LIGHTS = {};
 // ---------- 地面 ----------
 var GROUND_MESH = null;
 function buildGround(){
-  var g = new THREE.PlaneGeometry(120, 120);
+  var g = new THREE.PlaneGeometry(400, 400);
   var m = new THREE.MeshStandardMaterial({
     map: TEX.asphalt, color: 0x5d6068, roughness: 0.52, metalness: 0.3
   });
@@ -1115,11 +1117,7 @@ function buildGround(){
   man.layers.set(1);
   scene.add(man);
 
-  // 外围边界（不可见墙，防止走出场景）
-  addCol(LAY.BOUND.x0 - 1, LAY.BOUND.x0, -20, 20, 'bound');
-  addCol(LAY.BOUND.x1, LAY.BOUND.x1 + 1, -20, 20, 'bound');
-  addCol(-30, 30, LAY.BOUND.z1, LAY.BOUND.z1 + 1, 'bound');
-  addCol(-30, 30, -20, -20.5, 'bound');
+  // 边界墙已移除（以后需要再接回来：addCol + collide 里的 clamp）
 }
 // ===== p3 便利店外壳：墙体 / 玻璃 / 自动门 / 招牌 / 雨棚 =====
 
@@ -2598,9 +2596,9 @@ function collide(p, r){
       }
     }
   }
-  // 世界边界
-  p.x = clamp(p.x, LAY.BOUND.x0, LAY.BOUND.x1);
-  p.z = clamp(p.z, LAY.BOUND.z0, LAY.BOUND.z1);
+  // 没有空气墙了：只在极端远处兜底（防止浮点精度出问题）
+  p.x = clamp(p.x, -180, 180);
+  p.z = clamp(p.z, -180, 180);
 }
 
 function surfaceAt(x, z){
@@ -4033,6 +4031,8 @@ function stepFrame(now){
   updatePick(dt);
   updatePay(dt);
   updateHold(dt);
+
+  if (SKY) SKY.position.copy(camera.position);
 
   // 雨与地面涟漪
   if (FX.rain){
