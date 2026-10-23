@@ -214,7 +214,7 @@
   <div class="big" id="clock">01:09</div>
   <div id="mode">第一人称</div>
   <div id="fps"></div>
-  <div id="ver">v10221721</div>
+  <div id="ver">v10231805</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -231,6 +231,12 @@
       <path d="M3.5 8.6A3.1 3.1 0 0 1 6.6 5.5h10.8a3.1 3.1 0 0 1 3.1 3.1v6.8a3.1 3.1 0 0 1-3.1 3.1H6.6a3.1 3.1 0 0 1-3.1-3.1z"/>
       <circle cx="12" cy="12" r="2.7"/>
       <path d="M9.6 2.6 7 5.5M14.4 2.6 17 5.5"/>
+    </svg>
+  </button>
+  <button id="btnGyro" class="lg iconBtn" aria-label="陀螺仪视角">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="7.4"/><circle cx="12" cy="12" r="2.1" fill="currentColor" stroke="none"/>
+      <path d="M12 2.4v2.2M12 19.4v2.2M2.4 12h2.2M19.4 12h2.2"/>
     </svg>
   </button>
   <button id="btnSound" class="lg iconBtn" aria-label="音效开关">
@@ -275,7 +281,7 @@
 <div id="start">
   <h1>雨夜便利店</h1>
   <div class="sub">あかりマート · 24H</div>
-  <div class="hint">左下摇杆走动 · 拖动画面看四周<br>按 C 切换第一 / 第三人称 · 推开玻璃门进去看看</div>
+  <div class="hint">手机：左下摇杆走动 · 拖动画面看四周 · 圆圈图标开陀螺仪<br>电脑：WASD 走 · 鼠标转视角 · 空格切换鼠标锁定 / C 切视角<br>推开玻璃门进去看看</div>
   <button id="btnStart">进 入 夜 色</button>
   <div id="loading">正在生成场景…</div>
 </div>
@@ -3576,12 +3582,84 @@ function bindRipple(){
   }, true);
 }
 
+// ---------- 视角模式：手机陀螺仪 / 电脑鼠标锁定 ----------
+function detectDesktop(){
+  var fine = false;
+  try { fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch(e){}
+  return fine || navigator.maxTouchPoints === 0 || !('ontouchstart' in window);
+}
+var VIEWMODE = { gyro: false, base: null, yaw0: 0, pitch0: 0, isDesktop: detectDesktop() };
+var GYRO_SIGN = { yaw: 1, pitch: 1 };
+
+function syncGyroBtn(){
+  var b = document.getElementById('btnGyro');
+  if (!b) return;
+  var on = VIEWMODE.isDesktop ? (document.pointerLockElement === canvas) : VIEWMODE.gyro;
+  b.classList.toggle('on', !!on);
+}
+
+function toggleViewMode(){
+  if (VIEWMODE.isDesktop){
+    if (document.pointerLockElement === canvas){
+      if (document.exitPointerLock) document.exitPointerLock();
+    } else if (canvas.requestPointerLock){
+      canvas.requestPointerLock();
+    }
+    setTimeout(syncGyroBtn, 120);
+    return;
+  }
+  if (VIEWMODE.gyro){
+    VIEWMODE.gyro = false;
+  } else {
+    var start = function(){
+      VIEWMODE.gyro = true;
+      VIEWMODE.base = null;         // 每次开启都重新校准，避免跳一下
+      syncGyroBtn();
+    };
+    if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission){
+      DeviceOrientationEvent.requestPermission().then(function(st){
+        if (st === 'granted') start();
+      }).catch(function(){});
+    } else start();
+  }
+  syncGyroBtn();
+}
+
+window.addEventListener('deviceorientation', function(e){
+  if (!VIEWMODE.gyro || e.alpha === null) return;
+  if (!VIEWMODE.base){
+    VIEWMODE.base = { a: e.alpha, b: e.beta || 0, g: e.gamma || 0 };
+    VIEWMODE.yaw0 = PLAYER.yaw;
+    VIEWMODE.pitch0 = PLAYER.pitch;
+    return;
+  }
+  var ang = 0;
+  if (screen.orientation && screen.orientation.angle !== undefined) ang = screen.orientation.angle;
+  else if (window.orientation !== undefined) ang = window.orientation;
+  var da = e.alpha - VIEWMODE.base.a;
+  while (da > 180) da -= 360;
+  while (da < -180) da += 360;
+  var db = (e.beta || 0) - VIEWMODE.base.b;
+  var dg = (e.gamma || 0) - VIEWMODE.base.g;
+  var yawDeg, pitchDeg;
+  if (Math.abs(ang) === 90){          // 横屏
+    yawDeg = db * (ang > 0 ? -1 : 1);
+    pitchDeg = dg * (ang > 0 ? 1 : -1);
+  } else {                             // 竖屏
+    yawDeg = da;
+    pitchDeg = db;
+  }
+  PLAYER.yaw = VIEWMODE.yaw0 + yawDeg * GYRO_SIGN.yaw * Math.PI / 180;
+  PLAYER.pitch = clamp(VIEWMODE.pitch0 + pitchDeg * GYRO_SIGN.pitch * Math.PI / 180 * 1.15, -1.2, 1.2);
+});
+
 // ---------- 视角拖动 ----------
 function bindLook(){
   var dragging = false, pid = -1, lx = 0, ly = 0;
   var tapT = 0, tapX = 0, tapY = 0, tapMoved = 0;
   function down(e){
     if (e.target !== canvas) return;
+    if (VIEWMODE.gyro) return;          // 陀螺仪模式用倾斜看
     dragging = true; pid = e.pointerId; lx = e.clientX; ly = e.clientY;
     tapT = performance.now(); tapX = e.clientX; tapY = e.clientY; tapMoved = 0;
   }
@@ -3614,6 +3692,7 @@ function bindLook(){
   var keys = {};
   window.addEventListener('keydown', function(e){
     keys[e.code] = true;
+    if (e.code === 'Space'){ e.preventDefault(); toggleViewMode(); }
     if (e.code === 'KeyC') toggleView();
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') INPUT.run = true;
   });
@@ -3631,6 +3710,7 @@ function bindLook(){
   canvas.addEventListener('click', function(){
     if (!('ontouchstart' in window) && canvas.requestPointerLock) canvas.requestPointerLock();
   });
+  document.addEventListener('pointerlockchange', function(){ setTimeout(syncGyroBtn, 60); });
   document.addEventListener('mousemove', function(e){
     if (document.pointerLockElement === canvas){
       PLAYER.yaw -= e.movementX * 0.0022;
@@ -3808,6 +3888,9 @@ function boot(){
   bindStick();
   bindLook();
   bindRipple();
+  var gb = document.getElementById('btnGyro');
+  if (gb) gb.addEventListener('pointerdown', function(e){ e.stopPropagation(); toggleViewMode(); });
+  syncGyroBtn();
   pickInit();
   buildHold();
 
