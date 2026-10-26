@@ -261,7 +261,7 @@
   <div id="mode">第一人称</div>
   <div id="fps"></div>
   <div id="wallet">¥200</div>
-  <div id="ver">v10232253</div>
+  <div id="ver">v10261825</div>
 </div>
 <div class="tag">あかりマート · 雨夜</div>
 <div id="stick" class="lg"><div id="knob"></div></div>
@@ -2275,9 +2275,8 @@ function buildStreet(){
   }
   // 街道两侧的矮楼（近景剪影）
   boxes.push({ x: -16.5, y: 2.1, z: -12.0, w: 7.0, h: 4.2, d: 9.0, c: 0x0d1014, j: 0.06 });
-  boxes.push({ x: 21.5, y: 2.2, z: -15.0, w: 6.0, h: 4.4, d: 8.0, c: 0x0c0f13, j: 0.06 });
+  // 烟酒店东侧那栋纯黑小屋（用户嫌挡视线，2026-10-26 去掉，连带碰撞一起删）
   addCol(-20.1, -12.9, -16.5, -7.5, 'bldgL');
-  addCol(18.2, 24.8, -19.5, -10.5, 'bldgR');
   var bldMesh = new THREE.Mesh(batchBoxes(boxes), new THREE.MeshLambertMaterial({ vertexColors: true }));
   bldMesh.castShadow = true; bldMesh.receiveShadow = true;
   scene.add(bldMesh);
@@ -2554,30 +2553,8 @@ function buildActor(){
   scene.add(av);
   ACTOR.avatar = av;
 
-  // 雨伞
-  var um = new THREE.Group();
-  var canopy = new THREE.Mesh(new THREE.ConeGeometry(0.56, 0.26, 12, 1, true),
-    new THREE.MeshStandardMaterial({ color: 0x232c42, roughness: 0.42, metalness: 0.1, side: THREE.DoubleSide, emissive: 0x0e1420, emissiveIntensity: 1 }));
-  canopy.position.y = 1.02;
-  um.add(canopy);
-  // 伞骨
-  var ribMat = new THREE.MeshLambertMaterial({ color: 0x0f131b });
-  for (var r = 0; r < 6; r++){
-    var a = r / 6 * Math.PI * 2;
-    var rib = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.62), ribMat);
-    rib.position.set(Math.cos(a) * 0.26, 0.92, Math.sin(a) * 0.26);
-    rib.rotation.y = -a + Math.PI / 2;
-    rib.rotation.x = 0.32;
-    um.add(rib);
-  }
-  var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.009, 1.0, 6),
-    new THREE.MeshLambertMaterial({ color: 0x8d939c }));
-  pole.position.y = 0.5; um.add(pole);
-  var hook = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.014, 4, 8, Math.PI),
-    new THREE.MeshLambertMaterial({ color: 0x5a4030 }));
-  hook.position.set(0.05, 0.02, 0); hook.rotation.z = Math.PI / 2; um.add(hook);
-  scene.add(um);
-  ACTOR.umbrella = um;
+  // 雨伞：2026-10-26 用户要求去掉（原来那把伞是浮在人物身侧的，看着像个道具）
+  ACTOR.umbrella = null;
 
   ACTOR.umbrellaSway = 0;
 }
@@ -2683,7 +2660,7 @@ function updatePlayer(dt){
     u.armR.rotation.x = -0.42 + Math.sin(P.phase) * 0.05 * walkAmt;
     u.armR.rotation.z = -0.30;
   } else {
-    u.armR.rotation.x = -swing * 0.3 - 0.55;     // 右手举伞
+    u.armR.rotation.x = -swing * 0.3 - (ACTOR.umbrella ? 0.55 : 0.0);   // 有伞才举手
     u.armR.rotation.z = -0.35;
   }
   u.torso.position.y = 1.14 + Math.abs(Math.sin(P.phase)) * 0.02 * walkAmt;
@@ -2696,15 +2673,17 @@ function updatePlayer(dt){
 
   // 雨伞：跟着人走，稍微前倾
   var um = ACTOR.umbrella;
-  ACTOR.umbrellaSway = lerp(ACTOR.umbrellaSway, -P.vel.x * 0.03, 1 - Math.exp(-dt * 4));
-  var fp = P.mode === 'fp';
-  var lat = fp ? 0.14 : 0.33, fwd = fp ? 0.10 : -0.04;
-  var sideX = Math.cos(P.yaw) * lat - Math.sin(P.yaw) * fwd;
-  var sideZ = -Math.sin(P.yaw) * lat - Math.cos(P.yaw) * fwd;
-  um.position.set(P.pos.x + sideX, gy + (fp ? 1.26 : 1.19) + P.bobY * 0.5, P.pos.z + sideZ);
-  um.rotation.y = P.yaw;
-  um.rotation.z = ACTOR.umbrellaSway * 0.5 + Math.sin(P.phase) * 0.02 * walkAmt;
-  um.rotation.x = -0.06 + Math.min(spd * 0.02, 0.09);
+  if (um){
+    ACTOR.umbrellaSway = lerp(ACTOR.umbrellaSway, -P.vel.x * 0.03, 1 - Math.exp(-dt * 4));
+    var fp = P.mode === 'fp';
+    var lat = fp ? 0.14 : 0.33, fwd = fp ? 0.10 : -0.04;
+    var sideX = Math.cos(P.yaw) * lat - Math.sin(P.yaw) * fwd;
+    var sideZ = -Math.sin(P.yaw) * lat - Math.cos(P.yaw) * fwd;
+    um.position.set(P.pos.x + sideX, gy + (fp ? 1.26 : 1.19) + P.bobY * 0.5, P.pos.z + sideZ);
+    um.rotation.y = P.yaw;
+    um.rotation.z = ACTOR.umbrellaSway * 0.5 + Math.sin(P.phase) * 0.02 * walkAmt;
+    um.rotation.x = -0.06 + Math.min(spd * 0.02, 0.09);
+  }
 
   updateCamera(dt);
 }
@@ -2714,14 +2693,14 @@ function updateCamera(dt){
   var P = PLAYER;
   if (P.mode === 'fp'){
     ACTOR.avatar.visible = false;
-    ACTOR.umbrella.visible = (typeof PICK === 'undefined') || PICK.bag.length === 0;
+    if (ACTOR.umbrella) ACTOR.umbrella.visible = (typeof PICK === "undefined") || PICK.bag.length === 0;
     var ex = P.pos.x + Math.cos(P.yaw) * P.bobX;
     var ez = P.pos.z - Math.sin(P.yaw) * P.bobX;
     camera.position.set(ex, P.pos.y + P.eye + P.bobY, ez);
     camera.rotation.set(P.pitch, P.yaw, 0, 'YXZ');
   } else {
     ACTOR.avatar.visible = true;
-    ACTOR.umbrella.visible = (typeof PICK === 'undefined') || PICK.bag.length === 0;
+    if (ACTOR.umbrella) ACTOR.umbrella.visible = (typeof PICK === "undefined") || PICK.bag.length === 0;
     var tx = P.pos.x, ty = P.pos.y + 1.28, tz = P.pos.z;
     var dist = 3.9, hgt = 1.05;
     var cy = ty + hgt - P.pitch * 2.1;
@@ -3588,7 +3567,7 @@ function checkout(){
   if (!PICK.bag.length){ toast('篮子是空的'); return; }
   var total = basketTotal();
   if (WALLET.money + 0.001 < total){
-    toast('钱不够，还差 ' + money(total - WALLET.money));
+    toast('小子，你有点穷了');
     if (window.AUD && AUD.deny) AUD.deny();
     return;
   }
